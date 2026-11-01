@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><title>Khoa VLTL – PHCN | Quản lý đào tạo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#e9eff7;--card:#f8fafd;--tx:#1e2a3a;--mut:#64748b;--pr:#2b5797;--pr2:#dbe7fb;--bd:#b9cbe6;--ok:#16a34a;--no:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1722;--card:#17212f;--tx:#e6edf7;--mut:#9ab;--pr:#7fb0f0;--pr2:#1e3050;--bd:#2c3f5d}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx)}
+.w{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:22px;text-align:center;color:var(--pr);margin:8px 0}h2{font-size:18px}
+.g{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;cursor:pointer;text-align:center}
+.c:hover{border-color:var(--pr)}.c.off{opacity:.4;cursor:not-allowed}
+.p{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin:12px 0}
+button,.b{background:var(--pr);color:var(--bg);border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:15px}
+button.s{background:var(--pr2);color:var(--pr)}input,select{padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font-size:15px;max-width:100%}
+.ov{overflow-x:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid var(--bd);padding:6px 8px;text-align:left;font-size:14px}
+.pal{display:flex;flex-wrap:wrap;gap:6px}.pal span{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:6px;cursor:pointer;font-size:13px}
+.pal .d{background:var(--pr);color:var(--bg)}.pal .cur{outline:2px solid var(--no)}
+.o{display:block;padding:10px;border:1px solid var(--bd);border-radius:8px;margin:8px 0;cursor:pointer}.o.sel{background:var(--pr2);border-color:var(--pr)}
+.mut{color:var(--mut);font-size:13px}.tm{font-size:22px;font-weight:700;color:var(--no)}
+.top{display:flex;justify-content:space-between;align-items:center}
+.zone{font-weight:700;margin:14px 0 6px}.cols{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.stk{display:grid;gap:10px;align-content:start}
+.rm{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px}.rm h3{margin:0 0 6px;font-size:14px;display:flex;justify-content:space-between}.rm h3 span{font-weight:400;color:var(--mut);font-size:12px}
+.ch{display:inline-block;margin:2px;padding:3px 9px;border-radius:14px;font-size:12.5px;background:#dbe8fb;border:1px solid #a9c4ee;color:#1e3a6e}.ch.bs{background:#fde2e4;border-color:#f3a7ae;color:#b4232f}.ch.sv{background:#d9f2df;border-color:#8fd3a2;color:#15693a;cursor:pointer}.ch.sv:hover{filter:brightness(.93)}
+.hl{text-align:center;color:var(--mut);letter-spacing:4px;font-size:12px;border:1px dashed var(--bd);border-radius:10px;padding:10px}.sh{font-size:11px;color:var(--mut);margin:6px 0 2px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.tabs button.on{background:var(--pr);color:var(--bg)}
+.md{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:9}.md>div{background:var(--card);border-radius:12px;padding:20px;min-width:260px;max-width:90%}
+</style></head><body><div class="w" id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ====== DỮ LIỆU MẪU – thay bằng dữ liệu thật (hoặc nhập Excel ở mục Quản trị) ======
+const ADMIN_PIN="1234";
+const ROOMS=["P1","P2","P3","P4","P5","P6","P7","P8"];
+const mk=(b,s)=>s.split(";").map((x,i)=>{const[p,t]=x.split("|");return [(i+1)+". "+t,b+"#page="+p]});
+const PB="/_blob/82a151c6727cf0adec1e6cb9fdd0a76a",PY="/_blob/7f1cef51365509afe6ead67b3320a630",PK="/_blob/470740fe6376e435faf42d6fa5f0101d";
+const COM="1|Điều trị bằng parafin;3|Tập nằm đúng tư thế cho người bệnh liệt nửa người;6|Tập với xe đạp tập;9|Điều trị bằng tia hồng ngoại;11|Điều trị bằng chườm ngải cứu;12|Điều trị bằng nhiệt lạnh (chườm lạnh);14|Tập lăn trở khi nằm;17|Tập thay đổi tư thế từ nằm sang ngồi;20|Tập vận động chủ động";
+const TECH=[ // theo thứ tự SUBJ: Bác sĩ, Cử nhân PHCN (KTV), Y sĩ, Khác
+mk(PB,COM+";22|Tập vận động tự do tứ chi;26|Tập với thang tường;29|Tập với dụng cụ quay khớp vai;31|Kỹ thuật xoa bóp vùng;34|Kỹ thuật xoa bóp toàn thân;37|Tập với ròng rọc"),
+mk(PK,"1|Điều trị bằng parafin;3|Điều trị bằng nhiệt lạnh (chườm lạnh);5|Điều trị bằng sóng ngắn;7|Điều trị bằng siêu âm;9|Điều trị bằng các dòng điện xung;11|Điều trị bằng từ trường;13|Điều trị bằng máy kéo giãn cột sống lưng;15|Điều trị bằng máy kéo giãn cột sống cổ;17|Điều trị bằng sóng xung kích;19|Tập nằm đúng tư thế cho người bệnh liệt nửa người;22|Kỹ thuật tập tay và bàn tay cho người bệnh;25|Kỹ thuật tập đứng và đi cho người bệnh liệt nửa người;28|Tập đi với thanh song song;32|Tập đi với gậy;34|Tập vận động có trợ giúp;36|Tập vận động có kháng trở;39|Tập với ghế tập mạnh cơ tứ đầu đùi;42|Tập với xe đạp tập;45|Tập với bàn nghiêng;48|Kỹ thuật di động khớp;52|Kỹ thuật di động mô mềm;55|Kỹ thuật tập chuỗi đóng và chuỗi mở;58|Kỹ thuật hướng dẫn người liệt nửa người;61|Tập các vận động khéo léo của bàn tay;64|Tập phát âm;66|Lượng giá chức năng sinh hoạt hàng ngày;69|Thử cơ bằng tay;72|Đo tầm vận động khớp;74|Kỹ thuật can thiệp PHCN bằng nẹp cổ bàn chân AFO;84|Tập vận động có trợ giúp;86|Điều trị bằng tia hồng ngoại;88|Điều trị bằng chườm ngải cứu;89|Điều trị bằng nhiệt lạnh (chườm lạnh);91|Điều trị bằng dòng giao thoa;93|Tập lăn trở khi nằm;96|Tập thay đổi tư thế từ nằm sang ngồi;99|Tập ngồi thăng bằng tĩnh và động;103|Tập thay đổi tư thế từ ngồi sang đứng;106|Tập đứng thăng bằng tĩnh và động;110|Tập dáng đi;114|Tập đi với khung tập đi;116|Tập đi với nạng (nạng nách, nạng khuỷu);119|Tập lên xuống cầu thang;123|Tập đi trên các địa hình khác nhau;126|Tập vận động thụ động;128|Tập vận động chủ động;130|Tập vận động tự do tứ chi;134|Tập kéo dãn;139|Tập vận động trên bóng;142|Tập trong bồn bóng nhỏ;143|Tập tạo thuận thần kinh cơ cảm thụ bản thể (PNF) chi trên;148|Tập tạo thuận thần kinh cơ cảm thụ bản thể (PNF) chi dưới;153|Tập tạo thuận thần kinh cơ cảm thụ bản thể chức năng;157|Tập với thang tường;160|Tập với dụng cụ quay khớp vai;162|Tập thăng bằng với bàn bập bênh;165|Tập các kiểu thở;168|Tập ho có trợ giúp;171|Kỹ thuật kéo nắn trị liệu;174|Kỹ thuật ức chế co cứng tay;177|Kỹ thuật ức chế co cứng chân;180|Kỹ thuật ức chế co cứng thân mình;183|Kỹ thuật xoa bóp vùng;186|Kỹ thuật Frenkel;187|Tập điều hợp vận động;191|Tập vận động cột sống;197|Kỹ thuật xoa bóp bằng máy;199|Kỹ thuật tập vận động cho trẻ bị biến dạng;203|Kỹ thuật kiểm soát tư thế và vận động cho người bệnh Parkinson;206|Kỹ thuật ngồi/đứng dậy từ sàn nhà;208|Kỹ thuật thư giãn;212|Kỹ thuật tập sử dụng và điều khiển xe lăn;215|Kỹ thuật hướng dẫn người liệt hai chân ra vào xe lăn;221|Tập các vận động thô của bàn tay;224|Tập phối hợp hai tay;227|Tập phối hợp tay mắt;230|Tập phối hợp tay miệng;233|Tập các chức năng sinh hoạt hàng ngày (ADL);236|Tập ADL với các dụng cụ trợ giúp thích nghi;239|Tập nói;242|Tập giao tiếp (ngôn ngữ, ký hiệu, hình ảnh...);245|Lượng giá chức năng cho người khuyết tật;246|Lượng giá chức năng dáng đi;248|Lượng giá chức năng thăng bằng;253|Nghiệm pháp đi 6 phút;256|Kỹ thuật can thiệp PHCN bằng nẹp cổ bàn tay WHO;264|Kỹ thuật can thiệp PHCN bằng nẹp bàn chân FO;269|Kỹ thuật kéo nắn trị liệu;272|Kỹ thuật di động khớp"),
+mk(PY,COM+";22|Tập lên xuống cầu thang;26|Tập với dụng cụ quay khớp vai;28|Kỹ thuật xoa bóp vùng;31|Kỹ thuật xoa bóp toàn thân;34|Tập với ròng rọc"),
+[]];
+const CHECK=[1,2,3,4,5,6,7,8].map(i=>["Bảng kiểm QTKT số "+i,""]);
+const SUBJ=["Bác sĩ","Cử nhân PHCN","Y sĩ","Khác"];
+const DEF_Q=Array.from({length:40},(_,i)=>({q:`Câu hỏi mẫu số ${i+1}?`,o:["Đáp án A","Đáp án B","Đáp án C","Đáp án D"],a:i%4}));
+const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let students=LS("sv",[{n:"Nguyễn Văn A",d:"01/01/2000",from:"01/11/2026",to:"30/11/2026",room:"P1",t:"Bác sĩ"}]);
+let Q=LS("qs",DEF_Q), open=LS("open",{}), S={}, results=LS("res",[]);
+const $=s=>document.querySelector(s), A=$("#app");
+function pdf(u){const m=document.createElement("div");m.className="md";m.innerHTML=`<div style="width:100%;max-width:960px;height:100%;display:flex;flex-direction:column;padding:8px;background:transparent"><div style="margin-bottom:6px"><button onclick="this.closest('.md').remove()">✕ Đóng</button> <a href="${u}" target="_blank" style="color:#fff">Mở tab mới</a></div><iframe src="${u}" style="flex:1;border:0;background:#fff;border-radius:8px"></iframe></div>`;document.body.appendChild(m)}
+const link=(t,u)=>u?`<a href="#" onclick="pdf('${u}');return false">${t}</a>`:`${t} <span class="mut">(chưa gắn file PDF)</span>`;
+function home(){S={};A.innerHTML=`<h1>Chào mừng học viên đến thực hành tại khoa VLTL – PHCN</h1>
+<div class="g"><div class="c" onclick="rules()"><h2>📜 Nội quy</h2><div class="mut">Học viên bắt buộc tuân thủ đúng các nội quy của Khoa</div></div>
+<div class="c" onclick="rooms()"><h2>🏥 Danh sách phân phòng</h2></div></div>
+<h2>Đối tượng thực hành</h2><div class="g">${SUBJ.map((s,i)=>`<div class="c" onclick="subj(${i})"><h2>${s}</h2></div>`).join("")}</div>
+<p class="mut" style="text-align:center"><a href="#" onclick="admin();return false">Quản trị viên</a></p>`}
+function back(){return `<p><button class="s" onclick="home()">← Trang chủ</button></p>`}
+function rules(){A.innerHTML=back()+`<div class="p"><h2>Nội quy của Khoa</h2><p>[Nội dung nội quy sẽ được bổ sung]</p><p>📎 Đơn xin nghỉ phép: <span class="mut">(chưa gắn file – điền link vào biến LEAVE_URL)</span></p></div>`}
+const STAFF={"201-202":"BS Tuấn,ĐD Điệp,CN Bình,CN Nam,CN Phương,CN Thanh Tú,CN Thiên Phúc,CN Trúc,CN Luân","204-206":"CN Trọng Duy","200":"CN Nam,CN Quyên,CN Thúy","208-209":"BS Thắng,CN Đăng,CN Đức,CN Hiệp,CN Hoàng Thịnh,CN Khang,CN Khoa,CN Mai,CN Thành,CN Thành Nhân,CN Thiện,CN Trọng Nhân,CN Văn,CN Vy","207A":"CN Mười,CN Mỹ Tú,CN Thông,CN Thư","207B":"CN Nghĩa,CN Tuấn Thịnh","6.216":"BS Châu,BS Hùng,BS Huy,CN Hiếu,CN Hương,CN Kha,CN Thanh Duy","6.215":"BS Phúc","6.214":"CN Anh Duy,CN Ngôn,CN Tài","6.213":""};
+const SCH={w:{"201-202":"Ys Lê Thu,YS Hải Yến,KTV Trọng Các,KTV Đình Nhân,KTV Sơn Vũ,KTV Hồng Hạnh,YS Cư bù,KTV Kim Chung,BS Thanh Tú","207A":"BS Kiều Khanh,KTV Văn Quốc,KTV Tấn Ben,KTV Lê Quân,KTV Mỹ Linh,KTV Khả Phương,YS Thúy Oanh,YS Thanh Hà,YS Trung Tín,YS Thanh Hòa,KTV Minh Phương,BS DHYD 4","207B":"BS DHYD 1","208-209":"SV HB 11,YS Lê Hiếu,YS Xuân Nhi,KTV Thị Thương,KTV Thu Trang,KTV Tuyết Nhi,KTV Việt Thắng,YS Công Trương,YS Mỹ Dung,BS Chí Thuận,Thiên Cơ","6.216":"KTV Thu Thảo,KTV Trường Duy,KTV Tuyết Nhi|tối,KTV Thu Trang|tối,KTV Kim Chung|tối","6.215":"BS Khánh Huyền"},
+t7:{"204-206":"Phạm Trần Minh Hiếu,Trần Thị Ý Như 2001","207A":"Đặng Kim Minh,Vũ Thị Hát,Trần Thị Thùy Tiên,Nguyễn Minh Khôi,Tăng Hoài Phương,Nguyễn Thành Đạt,Huỳnh Hải Anh,Nguyễn Hoàng Bá,Hà Minh Đức,CN Hoàng Thịnh,CCHN YS Hải Yến,CCHN YS Trung Tín,CCHN KTV Quân,Trương Thị Hồng Thảo","6.216":"CCHN KTV Trang|sáng,CCHN KTV Nhi|sáng,CCHN KTV Thường|sáng,CCHN KTV Thường|chiều,CCHN KTV Nhi|chiều,Đặng Kim Minh|chiều,Vũ Thị Hát|chiều,Hà Minh Đức|chiều,Trần Thị Ý Như 2001|chiều"},
+cn:{"204-206":"Phạm Trần Minh Hiếu","207A":"Đặng Kim Minh,Mạc Văn Cư,Huỳnh Hải Anh,Nguyễn Hoàng Bá,Lê Tấn Hiếu,Mã Xuân Khoa,Hà Minh Đức,CCHN KTV Thường,CCHN YS Hải Yến,CCHN YS Xuân Nhi,CCHN YS Trung Tín,Ngô Văn Phương","6.216":"CCHN KTV Trang,CCHN KTV Nhi,CN Tuấn Thịnh"}};
+let TAB="cn";
+const chip=(n,sv)=>{const [a,b]=n.split("|");return `<span class="ch ${sv?"sv":/^BS /.test(a)?"bs":""}" ${sv?`data-n="${a}" onclick="stu(this.dataset.n)"`:""}>${a}${b?" · "+b:""}</span>`};
+function rm(id,t,note){const st=STAFF[id]?STAFF[id].split(","):[],sv=(SCH[TAB][id]||"").split(",").filter(x=>x);return `<div class="rm"><h3>${t}<span>${st.length} NV · ${sv.length} học viên</span></h3>${note?`<i class="mut">${note}</i>`:st.map(x=>chip(x,0)).join("")}${sv.length?`<div class="sh">Học viên thực tập</div>`+sv.map(x=>chip(x,1)).join(""):""}</div>`}
+function stu(n){const s=students.find(x=>norm(x.n)==norm(n));const m=document.createElement("div");m.className="md";m.onclick=()=>m.remove();m.innerHTML=`<div><h2>${n}</h2><p>Họ và tên: <b>${n}</b><br>Thời gian thực tập: <b>${s&&s.from?s.from+" → "+s.to:"Từ … đến … (chưa cập nhật)"}</b></p><button>Đóng</button></div>`;document.body.appendChild(m)}
+function rooms(){const T={w:"Trong tuần 19–23/10",t7:"Thứ Bảy 31/10",cn:"Chủ Nhật 1/11"};A.innerHTML=back()+`<h2>Danh sách phân phòng</h2><div class="tabs">${Object.keys(T).map(k=>`<button class="${k==TAB?"on":"s"}" onclick="TAB='${k}';rooms()">${T[k]}</button>`).join("")}</div><p class="mut">Nhấn vào tên học viên (màu xanh lá) để xem thông tin. ${TAB=="w"?"":"Phòng 4.207–207B xếp chung vào P.207A."}</p>
+<div class="zone">Khu N4</div><div class="cols"><div class="stk">${rm("201-202","P.201 - 202")}<div class="cols">${rm("200","P.200")}<div class="hl">HÀNH LANG</div></div>${rm("208-209","P.208 - 209")}</div><div class="stk">${rm("204-206","P.204 - 206")}${rm("207A","P.207A")}${rm("207B","P.207B")}</div></div>
+<div class="zone">Khu N6</div><div class="cols">${rm("6.216","P.6.216")}${rm("6.215","P.6.215")}${rm("6.214","P.6.214")}${rm("6.213","P.6.213","Nhân sự dùng chung với P.6.216")}</div>`}
+function subj(i){const s=SUBJ[i];const ok=open[s];
+A.innerHTML=back()+`<h1>${s}</h1>
+<div class="p"><h2>1. Danh mục kỹ thuật PHCN (TT 32/2023/TT-BYT)</h2>${TECH[i].length?TECH[i].map(t=>`<div>• ${link(t[0],t[1])}</div>`).join(""):'<span class="mut">Chưa có danh mục cho nhóm này.</span>'}</div>
+<div class="p"><h2>2. Bảng kiểm quy trình kỹ thuật</h2>${CHECK.map((t,k)=>`<div>${k+1}. ${link(t[0],t[1])}</div>`).join("")}</div>
+<div class="p"><h2>3. Bộ câu hỏi trắc nghiệm ôn tập</h2>${link("Mở file PDF","")}</div>
+<div class="c ${ok?"":"off"}" ${ok?`onclick="ex1('${s}')"`:""}><h2>4. Thi kết thúc thực hành</h2><div class="mut">${ok?"Đã mở – nhấn để vào thi":"Chờ Quản trị viên mở"}</div></div>`}
+function ex1(s){S={t:s};A.innerHTML=back()+`<div class="p"><h2>Thi – ${s}</h2><p><input id="nm" placeholder="Họ và tên"> <input id="db" placeholder="Ngày sinh (dd/mm/yyyy)"></p><button onclick="ex2()">Tiếp tục</button></div>`}
+const norm=x=>String(x||"").trim().toLowerCase().replace(/\s+/g," ");
+function ex2(){const n=$("#nm").value,d=$("#db").value;if(!n||!d)return alert("Vui lòng nhập đủ thông tin");
+const f=students.find(s=>norm(s.n)==norm(n)&&norm(s.d)==norm(d))||{n,d,from:"",to:""};S.st=f;S.n=n;S.d=d;
+A.innerHTML=back()+`<div class="p"><h2>Thông tin học viên</h2><p>Họ tên: <b>${f.n}</b><br>Ngày sinh: <b>${f.d}</b><br>Thực hành tại khoa: <b>${f.from||"?"} – ${f.to||"?"}</b><br>Số câu: <b>${Math.min(40,Q.length)}</b> · Thời gian: <b>30 phút</b></p>${f.from?"":'<p class="mut">Không tìm thấy trong danh sách học viên.</p>'}<button onclick="start()">Xác nhận vào thi</button></div>`}
+function start(){S.qs=Q.slice(0,40);S.ans={};S.i=0;S.left=1800;S.t0=Date.now();S.tm=setInterval(()=>{S.left=1800-Math.floor((Date.now()-S.t0)/1000);if(S.left<=0)return submit();$("#tm")&&($("#tm").textContent=fmt(S.left))},1000);run()}
+const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+function run(){const q=S.qs[S.i];A.innerHTML=`<div class="top"><b>Câu ${S.i+1}/${S.qs.length}</b><span class="tm" id="tm">${fmt(S.left)}</span></div>
+<div class="p pal">${S.qs.map((_,k)=>`<span class="${S.ans[k]!=null?"d":""} ${k==S.i?"cur":""}" onclick="S.i=${k};run()">${k+1}</span>`).join("")}</div>
+<div class="p"><h2>${q.q}</h2>${q.o.map((o,k)=>`<label class="o ${S.ans[S.i]==k?"sel":""}" onclick="S.ans[S.i]=${k};run()">${"ABCD"[k]}. ${o}</label>`).join("")}
+<button class="s" onclick="S.i=Math.max(0,S.i-1);run()">← Trước</button> <button onclick="S.i=Math.min(S.qs.length-1,S.i+1);run()">Tiếp →</button> <button style="background:var(--no);color:#fff;float:right" onclick="if(confirm('Nộp bài?'))submit()">Nộp bài</button></div>`}
+function submit(){clearInterval(S.tm);const tot=S.qs.length;const ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length;const sc=+(ok/tot*10).toFixed(2);
+const r={n:S.st.n,d:S.st.d,t:S.t,from:S.st.from||"",to:S.st.to||"",ok,tot,sc,at:new Date().toLocaleString("vi-VN")};results.push(r);SV("res",results);
+A.innerHTML=`<div class="p" style="text-align:center"><h1>Kết quả</h1><p>Số câu đúng: <b>${ok}/${tot}</b></p><h2>Điểm: ${sc}/10</h2><button onclick="home()">Về trang chủ</button></div>`}
+function admin(){const p=prompt("Mật khẩu quản trị");if(p!==ADMIN_PIN)return;
+A.innerHTML=back()+`<div class="p"><h2>Quản trị</h2><h3>Mở thi theo đối tượng</h3>${SUBJ.map(s=>`<label><input type="checkbox" ${open[s]?"checked":""} onchange="open['${s}']=this.checked;SV('open',open)"> ${s}</label> `).join("")}
+<h3>Nhập danh sách học viên (Excel: Họ tên | Ngày sinh | Từ ngày | Đến ngày | Phòng | Đối tượng)</h3><input type="file" accept=".xlsx,.xls" onchange="imp(this,'sv')">
+<h3>Nhập câu hỏi (Excel: Câu hỏi | A | B | C | D | Đáp án A/B/C/D)</h3><input type="file" accept=".xlsx,.xls" onchange="imp(this,'q')">
+<h3>Phân phòng tự động</h3><button onclick="auto()">Chia đều học viên vào ${ROOMS.length} phòng</button>
+<h3>Kết quả thi (${results.length})</h3><button onclick="exp()">Xuất Excel</button></div>`}
+function imp(el,k){const f=el.files[0];if(!f)return;f.arrayBuffer().then(b=>{const rows=XLSX.utils.sheet_to_json(XLSX.read(b).Sheets[XLSX.read(b).SheetNames[0]],{header:1,raw:false}).slice(1).filter(r=>r[0]);
+if(k=="sv"){students=rows.map(r=>({n:r[0],d:r[1],from:r[2],to:r[3],room:r[4],t:r[5]}));SV("sv",students)}
+else{Q=rows.map(r=>({q:r[0],o:[r[1],r[2],r[3],r[4]],a:"ABCD".indexOf(String(r[5]).trim().toUpperCase())}));SV("qs",Q)}alert("Đã nhập "+rows.length+" dòng")})}
+function auto(){students.forEach((s,i)=>s.room=ROOMS[i%ROOMS.length]);SV("sv",students);alert("Đã phân phòng")}
+async function exp(){const H=["STT","Họ tên","Ngày sinh","Đối tượng","Từ ngày","Đến ngày","Số câu đúng","Tổng số câu","Điểm","Thời điểm nộp"];
+const ws=XLSX.utils.aoa_to_sheet([H,...results.map((r,i)=>[i+1,r.n,r.d,r.t,r.from,r.to,r.ok,r.tot,r.sc,r.at])]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"KetQuaThi");
+const d=XLSX.write(wb,{type:"array",bookType:"xlsx"});try{const dl=await claude.use("downloads");if(!dl)return alert("Không hỗ trợ tải file ở môi trường này");await dl.save({filename:"ket_qua_thi_VLTL.xlsx",data:new Uint8Array(d)})}catch(e){}}
+let PJ=null;const DOCS={};
+function loadPJ(){return PJ||(PJ=new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";ok()};s.onerror=no;document.head.appendChild(s)}))}
+function pdf(u){const [p,h]=u.split("#page=");let n=+h||1;const m=document.createElement("div");m.className="md";m.innerHTML=`<div style="width:100%;max-width:960px;height:100%;display:flex;flex-direction:column;padding:8px"><div style="margin-bottom:6px;color:#fff"><button id="px">✕ Đóng</button> <button class="s" id="pp">◀</button> <span id="pn"></span> <button class="s" id="pnx">▶</button> <button class="s" id="pd">Tải về</button></div><div id="pc" style="flex:1;overflow:auto;background:#fff;border-radius:8px;text-align:center;color:#333"><p>Đang tải…</p></div></div>`;document.body.appendChild(m);
+const q=s=>m.querySelector(s);q("#px").onclick=()=>m.remove();let doc,buf;
+const show=async()=>{if(!doc)return;n=Math.max(1,Math.min(doc.numPages,n));q("#pn").textContent=n+" / "+doc.numPages;const pg=await doc.getPage(n),box=q("#pc"),v0=pg.getViewport({scale:1}),sc=Math.min(2,(box.clientWidth-16)/v0.width),vp=pg.getViewport({scale:sc}),c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;c.style.maxWidth="100%";await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;box.replaceChildren(c);box.scrollTop=0};
+q("#pp").onclick=()=>{n--;show()};q("#pnx").onclick=()=>{n++;show()};
+q("#pd").onclick=async()=>{try{const dl=await claude.use("downloads");if(dl&&buf)await dl.save({filename:"quy_trinh_ky_thuat.pdf",data:new Uint8Array(buf)})}catch(e){}};
+(async()=>{try{await loadPJ();if(!DOCS[p])DOCS[p]=fetch(p).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()});buf=await DOCS[p];doc=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;await show()}catch(e){q("#pc").innerHTML="<p>Không mở được file PDF ("+(e.message||e)+")</p>";delete DOCS[p]}})()}
+const QS={
+parafin:{t:'Điều trị bằng parafin',q:[
+['Độ nóng chảy của parafin dùng trong y học là:','55–60 °C','40–45 °C','65–70 °C','75–80 °C'],
+['Trường hợp nào sau đây là chống chỉ định điều trị bằng parafin?','Chấn thương cấp, nhiễm trùng cấp','Viêm mạn tính','Cần giảm đau, giãn cơ','Cần tăng tuần hoàn cục bộ'],
+['Cần thận trọng khi điều trị parafin ở người bệnh nào?','Người bệnh mất cảm giác','Người bệnh viêm mạn tính','Người bệnh cần giãn mạch ngoại vi','Người bệnh cần giảm đau giãn cơ'],
+['Thời gian thực hiện một lần điều trị parafin khoảng:','20–30 phút','5–10 phút','40–50 phút','60–90 phút'],
+['Kỹ thuật quét hoặc nhúng parafin được lặp lại đến khi lớp parafin bọc ngoài dày:','1 hoặc 2 mm','5 hoặc 6 mm','1 hoặc 2 cm','0,1 mm'],
+['Khi kết thúc điều trị parafin, người thực hiện cần:','Gỡ parafin, lau khô, kiểm tra da, ghi phiếu điều trị','Gỡ parafin, chườm lạnh vùng điều trị, ghi phiếu điều trị','Để parafin nguội tự bong, không kiểm tra da','Gỡ parafin, xoa dầu nóng lên vùng điều trị'],
+['Khi người bệnh dị ứng với parafin, cần xử trí:','Ngừng điều trị, xử trí theo phác đồ, kiểm tra parafin có lẫn hóa chất không','Giảm nhiệt độ parafin và tiếp tục điều trị','Rút ngắn thời gian điều trị còn một nửa','Tiếp tục điều trị, bôi thuốc chống ngứa']]},
+tuthe:{t:'Tập nằm đúng tư thế cho người bệnh liệt nửa người',q:[
+['Liệt nửa người là liệt:','Một tay, một chân và nửa mặt cùng bên','Hai chân và nửa mặt','Hai tay và hai chân','Một tay và chân bên đối diện'],
+['Mục đích của việc cho người bệnh liệt nửa người nằm đúng tư thế là:','Đề phòng và khắc phục co cứng bên liệt','Tăng trương lực cơ bên liệt','Hạn chế người bệnh sử dụng bên liệt','Giúp người bệnh bất động hoàn toàn'],
+['Cần thận trọng khi đặt tư thế đúng cho người bệnh:','Hôn mê','Liệt nửa người do đột quỵ não','Liệt nửa người do chấn thương sọ não','Liệt nửa người do viêm màng não'],
+['Khi người bệnh nằm nghiêng về phía bên liệt, vai bên liệt được:','Đưa ra trước, vuông góc với thân','Đưa ra sau, áp sát thân','Nâng cao, gấp sát tai','Ép vào ngực, khuỷu gấp'],
+['Người bệnh nằm ngửa: dùng gối mỏng đỡ dưới xương bả vai nhằm:','Đưa khớp vai bên liệt ra trước','Nâng đầu cao hơn thân mình','Kéo khớp vai bên lành ra sau','Gấp cổ để người bệnh nhìn rõ'],
+['Cần lăn trở và thay đổi tư thế nằm cho người bệnh liệt nửa người sau mỗi:','3–4 giờ','30 phút','1 giờ','8 giờ'],
+['Khi người bệnh nằm nghiêng về phía bên lành, tay bên liệt được:','Đỡ trên gối phía trước, cao ngang thân, vai và khuỷu duỗi','Để phía sau lưng, vai duỗi ra sau','Đặt dưới thân mình để cố định','Gấp sát ngực, cổ tay co']]},
+xedap:{t:'Tập với xe đạp tập',q:[
+['Xe đạp tập có đặc điểm nào sau đây?','Thiết bị đặt cố định, điều chỉnh được lực kháng trở','Thiết bị di động, lực kháng trở không đổi','Thiết bị chuyên tập chi trên','Thiết bị dùng cho người bệnh liệt hoàn toàn'],
+['Chống chỉ định tập với xe đạp tập là:','Nhồi máu cơ tim cấp','Suy tim độ 1, 2','Đột quỵ não','Chấn thương cột sống'],
+['Cần thận trọng khi tập xe đạp ở người bệnh:','Suy tim độ 3, 4','Suy tim độ 1, 2','Sau phẫu thuật lồng ngực','Có bệnh hô hấp'],
+['Thời gian tập xe đạp tập mỗi lần là:','20–30 phút','5–10 phút','40–50 phút','60–70 phút'],
+['Trong thời gian tập có thể cho người bệnh nghỉ:','1–2 lần, mỗi lần 2–3 phút','5–6 lần, mỗi lần 10 phút','1 lần, kéo dài 15 phút','Không được nghỉ giữa chừng'],
+['Với người bệnh liệt chi trên, khi tập xe đạp cần:','Dùng băng dán cố định tay người bệnh vào ghi đông','Cho người bệnh bỏ tay khỏi ghi đông','Để tay buông thõng hai bên người','Buộc tay người bệnh vào yên xe'],
+['Khi người bệnh tăng huyết áp trong lúc tập, cách xử trí là:','Nghỉ ngơi, dùng thuốc hạ áp','Tăng lực kháng trở để người bệnh thích nghi','Tiếp tục tập thêm 10 phút rồi nghỉ','Chườm lạnh vùng cơ chân']]},
+hongngoai:{t:'Điều trị bằng tia hồng ngoại',q:[
+['Tác dụng chủ yếu của tia hồng ngoại là:','Nhiệt nóng','Nhiệt lạnh','Tác dụng hóa học','Tác dụng điện phân'],
+['Trường hợp nào sau đây là chỉ định điều trị bằng tia hồng ngoại?','Mềm xơ sẹo, kết dính','Vùng da vô mạch, mất cảm giác','Vết thương đang chảy máu','Sốt cao'],
+['Chống chỉ định điều trị bằng tia hồng ngoại là:','Điều trị trực tiếp lên khối u','Dự phòng loét','Sưởi ấm','Giảm đau, giãn cơ'],
+['Khoảng cách từ đèn hồng ngoại đến da là:','50–60 cm','5–10 cm','20–30 cm','80–100 cm'],
+['Thời gian thực hiện một lần điều trị bằng tia hồng ngoại là:','15–20 phút','5–10 phút','30–40 phút','50–60 phút'],
+['Trước khi chiếu đèn hồng ngoại cần:','Thử cảm giác nóng lạnh trên người bệnh','Đo điện tim cho người bệnh','Bôi dầu nóng lên vùng điều trị','Chườm lạnh vùng điều trị'],
+['Khi người bệnh choáng váng trong lúc điều trị hồng ngoại, xử trí:','Nằm nghỉ ngơi, theo dõi','Tăng công suất đèn','Cho người bệnh đứng dậy đi lại','Chiếu thêm 10 phút']]},
+nhietlanh:{t:'Điều trị bằng nhiệt lạnh (chườm lạnh)',q:[
+['Điều trị bằng nhiệt lạnh là chườm lạnh ở nhiệt độ:','0–18 °C','20–25 °C','26–30 °C','31–35 °C'],
+['Chỉ định của chườm lạnh là:','Giảm đau, phù nề, xuất huyết dưới da trong chấn thương cấp','Làm mềm tổ chức xơ sẹo','Điều trị viêm tắc mạch chi','Làm ấm vùng điều trị'],
+['Chống chỉ định chườm lạnh là:','Tổ chức xơ sẹo, viêm tắc mạch chi','Hạ nhiệt','Hạn chế quá trình viêm cấp','Giảm phù nề do chấn thương cấp'],
+['Thời gian thực hiện chườm lạnh khoảng:','6–12 phút','20–30 phút','40–50 phút','60 phút'],
+['Khi chườm lạnh cần thận trọng với đối tượng nào?','Trẻ em','Người cao tuổi khỏe mạnh','Người bệnh chấn thương cấp','Người bệnh cần hạ nhiệt'],
+['Cách tiến hành chườm lạnh đúng là:','Chườm lên vùng cần điều trị, cố định hoặc di động, thời gian theo chỉ định','Chườm vùng da lành bên đối diện suốt 60 phút','Chườm khi vùng điều trị còn ướt, không lau khô','Đặt đá trực tiếp lên khối u'],
+['Khi người bệnh bị bỏng lạnh tại chỗ cần:','Ngừng điều trị, xử trí theo bỏng lạnh','Tiếp tục chườm với nhiệt độ cao hơn','Giảm thời gian chườm nhưng vẫn tiếp tục','Xoa bóp mạnh vùng da bị bỏng']]},
+lantro:{t:'Tập lăn trở khi nằm',q:[
+['Lăn trở thay đổi tư thế nhằm mục đích quan trọng nhất là:','Phòng chống các thương tật thứ cấp','Tăng sức mạnh cơ chi trên','Tăng tầm vận động khớp vai','Cải thiện thăng bằng khi đứng'],
+['Chống chỉ định của tập lăn trở là:','Có nguy cơ trật cột sống, nguy cơ chảy máu','Người bệnh nằm lâu một tư thế','Người bệnh liệt nửa người','Người bệnh nằm viện dài ngày'],
+['Cần thận trọng khi lăn trở ở người bệnh:','Choáng, trụy tim mạch','Nằm lâu một tư thế','Huyết áp ổn định','Cần phòng loét'],
+['Lăn trở, thay đổi tư thế được thực hiện cách nhau:','2–3 giờ/lần','15–20 phút/lần','5–6 giờ/lần','12 giờ/lần'],
+['Với người bệnh chưa chủ động vận động được, số người thực hiện lăn trở là:','2–3 người, thực hiện đồng bộ','1 người, thực hiện nhanh','4–5 người, thực hiện lần lượt','Người bệnh tự lăn trở'],
+['Người bệnh chủ động nằm ngửa tập lăn sang bên liệt: người thực hiện hướng dẫn:','Nâng tay chân bên không liệt ra phía trước rồi đưa sang bên liệt','Nâng tay chân bên liệt ra sau rồi đưa sang bên lành','Giữ cố định hai chân rồi xoay đầu sang bên liệt','Kéo mạnh tay bên liệt để người bệnh lăn theo'],
+['Khi lăn trở có diễn biến xấu, người thực hiện phải:','Dừng ngay vận động, báo cáo bác sĩ','Tiếp tục hoàn thành động tác','Giảm tốc độ và tiếp tục lăn trở','Ghi hồ sơ rồi lăn trở lại sau 5 phút']]},
+namngoi:{t:'Tập thay đổi tư thế từ nằm sang ngồi',q:[
+['Tư thế ngồi được dùng nhiều nhất trong đời sống hàng ngày vì là tư thế:','Thoải mái, tự nhiên, vững vàng','Làm tăng gánh nặng cho tim','Giúp hai chân chịu toàn bộ trọng lượng cơ thể','Làm giảm tầm vận động cột sống'],
+['Chống chỉ định tập thay đổi tư thế từ nằm sang ngồi là:','Gãy xẹp thân đốt sống, gãy xương chậu mới can chưa chắc','Người bệnh nằm lâu tại giường','Chuẩn bị tập đứng dậy từ vị thế ngồi','Cần rèn luyện tư thế đúng phần trên cơ thể'],
+['Cần thận trọng khi tập ngồi dậy ở người bệnh:','Rối loạn tri giác nhận thức, không hiểu lệnh','Nằm lâu tại giường','Cần chuyển từ giường sang xe lăn','Cần tập cử động cẳng bàn chân không chịu trọng lượng'],
+['Thời gian thực hiện kỹ thuật tập nằm sang ngồi là:','10–20 phút','1–2 phút','40–50 phút','60–90 phút'],
+['Ngồi dậy từ nằm nghiêng một bên (liệt nửa người): người điều trị giúp người bệnh:','Đưa hai chân ra khỏi mép giường, nâng đầu vai, chống tay dưới đẩy thân lên','Nâng hai chân lên giường, nằm ngửa rồi bật người ngồi dậy','Giữ chặt hai chân, kéo người bệnh bằng một tay','Đỡ đầu, để người bệnh ngả lưng vào thành giường'],
+['Người bệnh liệt hai chi dưới ngồi dậy có trợ giúp bằng cách:','Níu tay người ngồi cuối giường, thang dây hoặc thanh song song','Bám vào ghế đặt cạnh giường rồi đứng thẳng','Tựa lưng vào tường và trượt người lên','Đẩy hai chân xuống sàn khi nằm ngửa'],
+['Cách dự phòng tụt huyết áp tư thế khi tập ngồi dậy ở người nằm lâu là:','Nâng đầu giường từ từ, tăng dần','Cho ngồi dậy đột ngột để thích nghi','Hạ đầu giường thấp hơn chân','Giữ người bệnh nằm yên, không theo dõi huyết áp']]},
+chudong:{t:'Tập vận động chủ động',q:[
+['Tập vận động chủ động là động tác vận động:','Do chính người bệnh thực hiện, không cần trợ giúp','Do người điều trị thực hiện hoàn toàn','Do dụng cụ kéo giãn thực hiện','Do người bệnh thực hiện với trợ giúp của người điều trị'],
+['Tập vận động chủ động được chỉ định khi kết quả thử cơ:','Từ bậc 3 trở lên','Bậc 0','Bậc 1','Bậc 2'],
+['Chống chỉ định tập vận động chủ động là:','Gãy xương, trật khớp chưa xử trí','Cần tăng sức mạnh cơ','Cần duy trì tầm vận động khớp','Người bệnh đã tự thực hiện được vận động'],
+['Cần thận trọng khi tập vận động chủ động ở người bệnh có:','Tình trạng tim mạch không ổn định','Kết quả thử cơ bậc 4','Khớp vận động bình thường','Hồ sơ bệnh án đầy đủ'],
+['Thời gian thực hiện kỹ thuật tập vận động chủ động là:','20–30 phút','5–10 phút','40–50 phút','60 phút'],
+['Khi bắt đầu tập vận động chủ động, mỗi động tác được thực hiện:','5–10 vận động, tăng dần; ngày tập 1–2 lần','30–40 vận động, ngày tập 5 lần','1–2 vận động, ngày tập 1 lần','50 vận động, ngày tập 3 lần'],
+['Đau kéo dài quá 3–4 giờ sau tập được xem là:','Tập quá mức, cần tạm ngừng tập đến khi hết đau','Dấu hiệu tiến triển tốt, cần tăng cường độ','Phản ứng bình thường, không cần xử trí','Dấu hiệu cần chuyển sang kỹ thuật khác ngay']]},
+tudo:{t:'Tập vận động tự do tứ chi',q:[
+['Vận động tự do tứ chi là phương pháp tập mà lực tạo ra cử động do:','Lực cơ của người bệnh, không ngoại lực hỗ trợ hay cản trở (trừ trọng lực)','Lực nâng đỡ của người điều trị','Lực kháng trở từ dụng cụ','Lực kéo của ròng rọc'],
+['Vận động tự do tứ chi là bước tăng tiến từ giai đoạn:','Tập chủ động có trợ giúp','Tập thụ động','Tập có kháng trở tối đa','Bất động tại giường'],
+['Chống chỉ định vận động tự do tứ chi là:','Sau nhồi máu cơ tim cấp','Cần tăng tầm vận động khớp','Cần cải thiện điều hợp thần kinh–cơ','Cần tăng lực cơ và sức bền'],
+['Thời gian thực hiện tập vận động tự do tứ chi là:','20–30 phút','5–10 phút','40–50 phút','60–90 phút'],
+['Trong giai đoạn hướng dẫn, tốc độ cử động của người bệnh nên:','Chậm hơn để hiểu rõ trình tự thực hiện','Nhanh hơn bình thường','Tối đa ngay từ đầu','Không cần kiểm soát'],
+['Trình tự thực hiện một cử động đúng là:','Vị trí khởi đầu → hết tầm vận động → trở lại vị trí khởi đầu → thư giãn → lặp lại','Hết tầm vận động → vị trí khởi đầu → lặp lại ngay không thư giãn','Vị trí khởi đầu → nửa tầm vận động → dừng','Thư giãn → vị trí khởi đầu → hết tầm → lặp lại'],
+['Sau tập, nếu mệt mỏi và đau khớp kéo dài quá 24 giờ cần:','Điều chỉnh lại chế độ tập cho phù hợp','Tăng cường độ tập vào ngày hôm sau','Tập thêm vào buổi tối','Ngừng điều trị vĩnh viễn']]},
+thangtuong:{t:'Tập với thang tường',q:[
+['Thang tường là dụng cụ tập:','Khớp vai, các cơ thân mình và chi trên','Khớp gối và cổ chân','Cột sống cổ khi kéo giãn','Thăng bằng khi đi'],
+['Chống chỉ định tập với thang tường là:','Người bệnh không có khả năng hợp tác','Yếu các cơ thân mình, chi trên','Đau hạn chế vận động khớp vai','Tràn dịch, dày dính màng phổi'],
+['Cần thận trọng khi tập thang tường ở người bệnh:','Thăng bằng kém','Có gù vẹo cột sống','Viêm quanh khớp vai','Sau phẫu thuật lồng ngực'],
+['Thời gian thực hiện kỹ thuật tập với thang tường là:','15–20 phút','5–10 phút','30–40 phút','50–60 phút'],
+['Tư thế người bệnh khi tập với thang tường là:','Đứng','Nằm ngửa','Nằm sấp','Ngồi xe lăn'],
+['Cử động duỗi khớp vai với thang tường: người bệnh đứng:','Xoay lưng lại, hai tay bám thang tường, ngả người ra trước','Quay mặt vào thang tường, khuỵu gối, đu người xuống','Nghiêng người, tay nắm thang rồi ngả người ra','Đối diện thang, hai tay dạng, ngả người về phía thang'],
+['Giãn cơ hô hấp bằng thang tường, động tác 1: hít vào bằng mũi tối đa kết hợp:','Đẩy hông ra sau và xuống dưới, hai đầu gối thẳng','Gập sâu hai đầu gối','Nhón gót, đẩy hông ra trước','Cúi đầu sát thang, hai tay buông']]},
+quayvai:{t:'Tập với dụng cụ quay khớp vai',q:[
+['Dụng cụ quay khớp vai dùng để:','Tập xoay khớp vai','Tập gấp duỗi khớp gối','Kéo giãn cột sống lưng','Tập đi trong thanh song song'],
+['Chống chỉ định tập với dụng cụ quay khớp vai là:','Trật khớp vai','Viêm quanh khớp vai','Chấn thương khớp vai','Di chứng sau bó bột'],
+['Chống chỉ định tập với dụng cụ quay khớp vai còn gồm người bệnh:','Khó khăn về nhận thức, không hiểu mệnh lệnh','Liệt nửa người','Đau hạn chế vận động khớp vai','Bất động kéo dài'],
+['Thời gian thực hiện kỹ thuật là:','15–20 phút','5 phút','30–40 phút','60 phút'],
+['Thời gian tập cho mỗi chiều quay là:','3–5 phút','30 giây','10–15 phút','20 phút'],
+['Ở bước hướng dẫn làm mẫu, kỹ thuật viên:','Đứng bên cạnh dụng cụ, nắm tay cầm, xoay vai theo chiều kim đồng hồ rồi ngược lại','Ngồi đối diện người bệnh, giữ cổ tay người bệnh','Đứng sau lưng, nâng hai tay người bệnh','Nằm cạnh dụng cụ, làm mẫu động tác dạng vai'],
+['Cách xử trí khi đau cơ sau tập là:','Dùng thuốc giảm đau, nghỉ ngơi, các biện pháp vật lý trị liệu','Tăng thời gian tập mỗi chiều','Tập liên tục không nghỉ','Cố định khớp vai bằng nẹp']]},
+xbvung:{t:'Kỹ thuật xoa bóp vùng',q:[
+['Xoa bóp là thủ thuật tác động lên:','Mô, cơ, vùng phản xạ và các đường kinh lạc','Tổ chức xương và sụn','Hệ tiêu hóa bằng hóa chất','Hệ hô hấp bằng khí dung'],
+['Chống chỉ định xoa bóp vùng là:','Viêm tĩnh mạch cấp, huyết khối tại vị trí điều trị','Co thắt cơ gây đau','Tổn thương mô mềm','Sẹo và kết dính'],
+['Phụ nữ có thai cần tránh xoa bóp ở vùng:','Bụng','Lưng','Cẳng chân','Cánh tay'],
+['Cần thận trọng khi xoa bóp ở:','Da quá mẫn cảm, vùng gãy xương','Cơ co thắt','Vùng cơ vai gáy','Vùng mô mềm sau bất động'],
+['Thời gian thực hiện xoa bóp vùng khoảng:','15–20 phút','5 phút','30–60 phút','90 phút'],
+['Bước 4 trong quy trình xoa bóp vùng là:','Nhào cơ','Xoa vuốt nông','Chà xát','Ấn day các huyệt'],
+['Khi người bệnh hoa mắt, chóng mặt trong lúc xoa bóp cần:','Dừng xoa bóp','Tăng lực xoa bóp','Chuyển sang kỹ thuật vỗ','Tiếp tục xoa bóp nhẹ hơn']]},
+xbtoanthan:{t:'Kỹ thuật xoa bóp toàn thân',q:[
+['Xoa bóp toàn thân tác động lên:','Hệ cơ, hệ thần kinh và hệ tuần hoàn tổng thể','Hệ tiêu hóa và hô hấp','Hệ xương khớp bằng lực kéo','Hệ nội tiết bằng thuốc'],
+['Chống chỉ định xoa bóp toàn thân là:','Viêm tĩnh mạch huyết khối','Cần chống mệt mỏi, giảm stress','Cần giảm phù nề','Cần kích thích hệ thần kinh'],
+['Cần thận trọng khi xoa bóp toàn thân ở người bệnh:','Suy yếu','Căng thẳng, mệt mỏi','Phù nề','Cần thư giãn'],
+['Thời gian thực hiện xoa bóp toàn thân là:','30–60 phút','5–10 phút','15–20 phút','2–3 giờ'],
+['Khi xoa vuốt, lực vuốt khởi đầu từ:','Phần xa tiến tới phần gần','Phần gần tiến tới phần xa','Giữa chi ra hai đầu','Vùng đau nhất ra xung quanh'],
+['Các cử động vỗ thường được dùng:','Vào cuối chương trình điều trị','Đầu tiên trước khi xoa dầu','Xen kẽ sau mỗi cử động xoa vuốt','Thay cho kỹ thuật nhào bóp'],
+['Khi có diễn biến xấu trong lúc xoa bóp toàn thân cần:','Ngừng xoa bóp ngay, báo cáo bác sĩ chuyên khoa PHCN','Giảm lực và tiếp tục xoa bóp','Chuyển sang kỹ thuật đập','Ghi hồ sơ rồi tiếp tục sau']]},
+rongroc:{t:'Tập với ròng rọc',q:[
+['Tập với ròng rọc giúp:','Tăng tầm vận động khớp vai, giãn cơ vùng cổ, vai, gáy','Tăng lực cơ tứ đầu đùi','Tập thăng bằng khi đứng','Kéo giãn cột sống lưng'],
+['Chống chỉ định tập với ròng rọc là:','Trật khớp vai','Viêm quanh khớp vai','Liệt nửa người','Gù vẹo cột sống'],
+['Cần thận trọng khi tập ròng rọc ở người bệnh:','Liệt mềm hoàn toàn','Đau hạn chế vận động khớp vai','Bệnh phổi tắc nghẽn mạn tính','Giãn phế quản'],
+['Thời gian thực hiện kỹ thuật tập ròng rọc là:','15–20 phút','5 phút','30–40 phút','60 phút'],
+['Khi tập gấp duỗi khớp vai, điểm treo ròng rọc xác định ở:','Ngay đỉnh đầu','Ngang thắt lưng','Phía trước ngang ngực','Phía dưới ngang gối'],
+['Mỗi động tác tập khớp vai với ròng rọc được giữ và lặp lại:','Giữ 5–10 giây; lặp lại 10–20 lần','Giữ 1–2 giây; lặp lại 3–5 lần','Giữ 30 giây; lặp lại 50 lần','Giữ 1 phút; lặp lại 2 lần'],
+['Động tác 1 tập giãn cơ hô hấp với ròng rọc: hít vào sâu bằng mũi, đồng thời:','Dang hai tay sang hai bên đến hết tầm vận động','Đưa hai tay lên cao khóa ra sau gáy','Ép hai tay sát ngực','Gập người ra trước']]},
+cauthang:{t:'Tập lên xuống cầu thang',q:[
+['Tập lên xuống cầu thang là bài tập:','Chức năng, giúp cải thiện chức năng đi lại','Thụ động, không cần người bệnh hợp tác','Kéo giãn cột sống','Thở với dụng cụ'],
+['Chỉ định tập lên xuống cầu thang gồm người bệnh:','Liệt nửa người, chấn thương sọ não, Parkinson','Thể trạng quá yếu, đứng chưa vững','Không hiểu lệnh','Rối loạn tri giác nặng'],
+['Chống chỉ định tập lên xuống cầu thang là:','Thể trạng quá yếu, đứng chưa vững','Đau thần kinh tọa','Gãy xương chi dưới','Sau phẫu thuật khớp háng'],
+['Cần thận trọng khi tập lên xuống cầu thang ở người bệnh:','Rối loạn tri giác nhận thức','Liệt nửa người','Yếu hai chi dưới','Đau một chân'],
+['Thời gian thực hiện tập lên xuống cầu thang là:','20–30 phút','5–10 phút','40–50 phút','60 phút'],
+['Người bệnh liệt nửa người lên cầu thang, thứ tự bước chân là:','Chân lành lên trước, sau đó chân liệt lên cùng bậc','Chân liệt lên trước, sau đó chân lành','Hai chân lên cùng lúc','Chân liệt lên trước hai bậc'],
+['Khi người bệnh xuống cầu thang, kỹ thuật viên đứng:','Phía trước người bệnh','Phía sau người bệnh','Bên cạnh, cách xa 2 m','Trên đầu cầu thang']]}};
+const KEYS=[['parafin','tuthe','xedap','hongngoai','nhietlanh','lantro','namngoi','chudong','tudo','thangtuong','quayvai','xbvung','xbtoanthan','rongroc'],['parafin','nhietlanh','tuthe','xedap','hongngoai','lantro','namngoi','chudong','tudo','thangtuong','quayvai','xbvung'],['parafin','tuthe','xedap','hongngoai','nhietlanh','lantro','namngoi','chudong','cauthang','quayvai','xbvung','xbtoanthan','rongroc'],[]];
+const NSET=[5,10,5,0],NQ=[40,60,40,0],LB=[['Thi kết thúc thực hành'],['PRETEST','POSTTEST'],['Thi kết thúc thực hành'],[]];
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shf(a,r){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function opts(x,r){const o=shf([0,1,2,3],r);return{q:x[0],o:o.map(i=>x[1+i]),a:o.indexOf(0)}}
+function build(i,set){const r=rng(97*i+31*set+5),ks=KEYS[i],n=NQ[i],base=Math.floor(n/ks.length);let pick=[],rest=[];
+ks.forEach(k=>{const h=[5,6][Math.floor(r()*2)],o=[h].concat(shf([0,1,2,3,4,5,6].filter(j=>j!=h),r));o.slice(0,base).forEach(j=>pick.push([k,j]));o.slice(base).forEach(j=>rest.push([k,j]))});
+pick=pick.concat(shf(rest,r).slice(0,n-pick.length));return shf(pick,r).map(p=>opts(QS[p[0]].q[p[1]],r))}
+function rev(i){A.innerHTML=back()+`<h2>Bộ câu hỏi ôn tập – ${SUBJ[i]}</h2><p class='mut'>Mỗi kỹ thuật có 5 câu ôn tập. Bấm Đáp án để xem.${i==1?' (Đang cập nhật: mới có 12/89 kỹ thuật.)':''}</p>`+KEYS[i].map((k,ti)=>`<div class='p'><h3>${ti+1}. ${QS[k].t}</h3>`+QS[k].q.slice(0,5).map((x,j)=>{const o=opts(x,rng(11*j+ti+3));return `<p><b>Câu ${j+1}.</b> ${o.q}<br>${o.o.map((t,m)=>'ABCD'[m]+'. '+t).join('<br>')}<br><details><summary class='mut'>Đáp án</summary><b>${'ABCD'[o.a]}</b></details></p>`}).join('')+`</div>`).join('')}
+function subj(i){const s=SUBJ[i],ex=LB[i].map((l,li)=>{const o=open[s+'|'+l],ok=o&&o.on;return `<div class='c ${ok?'':'off'}' style='margin-bottom:8px' ${ok?`onclick=ex1(${i},${li})`:''}><h2>4. ${l}</h2><div class='mut'>${ok?'Đã mở – Đề số '+o.set+' – nhấn để vào thi':'Chờ Quản trị viên mở'}</div></div>`}).join('')||`<div class='c off'><h2>4. Thi kết thúc thực hành</h2><div class='mut'>Chưa có bộ đề cho nhóm này</div></div>`;
+A.innerHTML=back()+`<h1>${s}</h1><div class='p'><h2>1. Danh mục kỹ thuật PHCN (TT 32/2023/TT-BYT)</h2>${TECH[i].length?TECH[i].map(t=>`<div>• ${link(t[0],t[1])}</div>`).join(''):'<span class=mut>Chưa có danh mục cho nhóm này.</span>'}</div><div class='p'><h2>2. Bảng kiểm quy trình kỹ thuật</h2>${CHECK.map((t,k)=>`<div>${k+1}. ${link(t[0],t[1])}</div>`).join('')}</div><div class='c ${KEYS[i].length?'':'off'}' style='margin-bottom:12px' ${KEYS[i].length?`onclick=rev(${i})`:''}><h2>3. Bộ câu hỏi trắc nghiệm ôn tập</h2><div class='mut'>${KEYS[i].length?KEYS[i].length+' kỹ thuật × 5 câu':'Đang cập nhật'}</div></div>`+ex}
+function ex1(i,li){const l=LB[i][li],o=open[SUBJ[i]+'|'+l];S={si:i,l,t:SUBJ[i],set:o.set};A.innerHTML=back()+`<div class='p'><h2>Thi ${li||i==1?l+' ':''}– ${SUBJ[i]}</h2><p><input id=nm placeholder='Họ và tên'> <input id=db placeholder='Ngày sinh (dd/mm/yyyy)'></p><button onclick=ex2()>Tiếp tục</button></div>`}
+function ex2(){const n=$('#nm').value,d=$('#db').value;if(!n||!d)return alert('Vui lòng nhập đủ thông tin');const f=students.find(s=>norm(s.n)==norm(n)&&norm(s.d)==norm(d))||{n,d,from:'',to:''};S.st=f;A.innerHTML=back()+`<div class='p'><h2>Thông tin học viên</h2><p>Họ tên: <b>${f.n}</b><br>Ngày sinh: <b>${f.d}</b><br>Thực hành tại khoa: <b>${f.from||'?'} – ${f.to||'?'}</b><br>Số câu: <b>${NQ[S.si]}</b> · Thời gian: <b>${NQ[S.si]*3/4} phút</b></p>${f.from?'':`<p class=mut>Không tìm thấy trong danh sách học viên.</p>`}<button onclick=start()>Xác nhận vào thi</button></div>`}
+function start(){S.qs=build(S.si,S.set);S.ans={};S.i=0;S.dur=NQ[S.si]*45;S.left=S.dur;S.t0=Date.now();S.tm=setInterval(()=>{S.left=S.dur-Math.floor((Date.now()-S.t0)/1000);if(S.left<=0)return submit();const e=$('#tm');if(e)e.textContent=fmt(S.left)},1000);run()}
+function submit(){clearInterval(S.tm);const tot=S.qs.length,ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length,sc=+(ok/tot*10).toFixed(2);results.push({n:S.st.n,d:S.st.d,t:S.t,ph:S.l,set:S.set,from:S.st.from||'',to:S.st.to||'',ok,tot,sc,at:new Date().toLocaleString('vi-VN')});SV('res',results);A.innerHTML=`<div class='p' style='text-align:center'><h1>Kết quả</h1><p>Số câu đúng: <b>${ok}/${tot}</b></p><h2>Điểm: ${sc}/10</h2><button onclick=home()>Về trang chủ</button></div>`}
+function setO(i,li,on,set){const id=SUBJ[i]+'|'+LB[i][li],o=open[id]||{on:false,set:1};if(on!==null)o.on=on;if(set!==null)o.set=set;open[id]=o;SV('open',open)}
+function admin(){const p=prompt('Mật khẩu quản trị');if(p!==ADMIN_PIN)return;const rows=[0,1,2].map(i=>LB[i].map((l,li)=>{const o=open[SUBJ[i]+'|'+l]||{on:false,set:1};return `<p><label><input type=checkbox ${o.on?'checked':''} onchange=setO(${i},${li},this.checked,null)> ${SUBJ[i]} – ${l}</label> Đề: <select onchange=setO(${i},${li},null,+this.value)>${Array.from({length:NSET[i]},(_,k)=>`<option ${o.set==k+1?'selected':''}>${k+1}</option>`).join('')}</select></p>`}).join('')).join('');
+A.innerHTML=back()+`<div class='p'><h2>Quản trị</h2><h3>Mở thi và chọn đề</h3>${rows}<h3>Nhập danh sách học viên (Excel: Họ tên | Ngày sinh | Từ ngày | Đến ngày | Phòng | Đối tượng)</h3><input type=file accept='.xlsx,.xls' onchange=imp(this,'sv')><h3>Kết quả thi (${results.length})</h3><button onclick=exp()>Xuất Excel</button></div>`}
+async function exp(){const H=['STT','Họ tên','Ngày sinh','Đối tượng','Giai đoạn','Bộ đề','Từ ngày','Đến ngày','Số câu đúng','Tổng số câu','Điểm','Thời điểm nộp'];const ws=XLSX.utils.aoa_to_sheet([H,...results.map((r,i)=>[i+1,r.n,r.d,r.t,r.ph,r.set,r.from,r.to,r.ok,r.tot,r.sc,r.at])]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'KetQuaThi');const d=XLSX.write(wb,{type:'array',bookType:'xlsx'});try{const dl=await claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:'ket_qua_thi_VLTL.xlsx',data:new Uint8Array(d)})}catch(e){}}
+home();
+</script></body></html>
