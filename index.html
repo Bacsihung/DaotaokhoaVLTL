@@ -945,7 +945,12 @@ function admin2(){
   </div>
   <div class='p'><div class='ch2'>Kết quả thi<span class='pill'>${results.length}</span></div>
     ${rr.length?`<div class='ov'><table class='tb'><tr><th>Họ tên</th><th>Mục</th><th>Đề</th><th>Điểm</th><th></th></tr>${rr.map(([r,i])=>`<tr><td>${r.n}</td><td>${r.t}${r.ph&&r.t=='Cử nhân PHCN'?' · '+r.ph:''}</td><td>${r.set||'—'}</td><td><b>${r.sc!=null?r.sc:'—'}</b>${r.tot?` (${r.ok}/${r.tot})`:''}</td><td>${r.qs?`<button class='s' onclick=dlr(${i})>Tải đề</button>`:''}</td></tr>`).join('')}</table></div>`:'<p class=mut>Chưa có bài thi nào.</p>'}
-    <div style='margin-top:10px'><button onclick=exp()>Xuất Excel kết quả</button></div>
+    <div style='margin-top:12px;display:flex;gap:8px;flex-wrap:wrap'>
+      <button onclick="expEnd('Bác sĩ')">Xuất kết quả Bác sĩ</button>
+      <button onclick="expEnd('Cử nhân PHCN')">Xuất kết quả Cử nhân</button>
+      <button onclick="expEnd('Y sĩ')">Xuất kết quả Y sĩ</button>
+    </div>
+    <p class='mut' style='margin-top:8px'>File mẫu cuối đợt: điểm lý thuyết lấy từ bài thi trắc nghiệm (nếu có), điểm thực hành để trống. File cũng được lưu vào Drive (thư mục kết quả thi).</p>
   </div>
   <div class='p' style='display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-style:dashed'>
     <div><div class='ch2' style='margin:0'>Phiên quản trị</div><p class='mut' style='margin:4px 0 0'>Đang đăng nhập. Thoát khi không dùng nữa.</p></div>
@@ -1370,6 +1375,136 @@ function wheelHTML(si){
     <button onclick=spinWheel(${si}) style='width:100%;font-size:16px;padding:12px'>🎲 Mở vòng quay – chọn ${n} bảng kiểm</button>
   </div>`+lookup;
 }
+
+
+// ===== Xuất kết quả cuối đợt theo mẫu 3 đối tượng =====
+function normName(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ')}
+function scoreForStudent(name, obj){
+  // Lấy điểm lý thuyết mới nhất từ results (bỏ QTKT vòng quay)
+  const nn=normName(name);
+  const list=(results||[]).filter(r=>normName(r.n)===nn && (!obj||r.t===obj) && r.type!=='wheel' && r.sc!=null && r.sc!=='—');
+  if(!list.length)return '';
+  list.sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
+  return list[0].sc;
+}
+function periodText(from,to){
+  if(from&&to)return 'Từ ngày '+from+' đến ngày '+to;
+  if(from)return 'Từ ngày '+from;
+  if(to)return 'Đến ngày '+to;
+  return '';
+}
+function currentMonthLabel(){
+  const d=new Date();
+  return 'THÁNG '+(d.getMonth()+1)+'/'+d.getFullYear();
+}
+function studentsByObj(obj){
+  // Ưu tiên danh sách học viên; nếu không có thì lấy từ results
+  const fromStu=(students||[]).filter(s=>{
+    const t=String(s.t||'');
+    if(obj==='Bác sĩ')return /bác sĩ|bac si|^bs/i.test(t)||t===obj;
+    if(obj==='Y sĩ')return /y sĩ|y si|^ys/i.test(t)||t===obj;
+    if(obj==='Cử nhân PHCN')return /cử nhân|cu nhan|ktv|phcn/i.test(t)||t===obj;
+    return t===obj;
+  });
+  if(fromStu.length)return fromStu.map(s=>({n:s.n,from:s.from||'',to:s.to||'',guide:''}));
+  // fallback: unique names from results
+  const seen={},out=[];
+  (results||[]).filter(r=>r.t===obj&&r.type!=='wheel').forEach(r=>{
+    const k=normName(r.n);if(seen[k])return;seen[k]=1;
+    out.push({n:r.n,from:r.from||'',to:r.to||'',guide:''});
+  });
+  return out;
+}
+function buildEndSheet(obj){
+  const d=new Date();
+  const ngay='TP. Hồ Chí Minh, ngày '+String(d.getDate()).padStart(2,'0')+' tháng '+String(d.getMonth()+1).padStart(2,'0')+' năm '+d.getFullYear();
+  const month=currentMonthLabel();
+  const list=studentsByObj(obj);
+  const isKTV=obj==='Cử nhân PHCN';
+  const title=isKTV
+    ?('DANH SÁCH KTV VLTL CHỨNG CHỈ HÀNH NGHỀ THI THỰC HÀNH CUỐI ĐỢT '+month)
+    :obj==='Y sĩ'
+      ?('DANH SÁCH Y SĨ THỰC HÀNH CHỨNG CHỈ HÀNH NGHỀ THI CUỐI ĐỢT '+month)
+      :('DANH SÁCH BÁC SĨ CHỨNG CHỈ HÀNH NGHỀ THI CUỐI ĐỢT '+month);
+  const rows=[];
+  // Header block
+  rows.push(['BỆNH VIỆN Y HỌC CỔ TRUYỀN THÀNH PHỐ HỒ CHÍ MINH','','CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM']);
+  rows.push(['KHOA VLTL - PHCN','','Độc lập - Tự do - Hạnh phúc']);
+  rows.push(['','',ngay]);
+  rows.push([title]);
+  rows.push([]);
+  if(isKTV){
+    rows.push(['STT','Họ và tên','Thời gian thực hành','Ký tên','Điểm thi','Người hướng dẫn']);
+    list.forEach((s,i)=>{
+      const sc=scoreForStudent(s.n,obj);
+      rows.push([i+1,s.n,periodText(s.from,s.to),'',sc,s.guide||'']);
+    });
+  }else{
+    rows.push(['STT','Họ và tên','Thời gian thực tập','Ký tên','','Người hướng dẫn tại khoa']);
+    rows.push(['','','','Lý thuyết','Thực hành','']);
+    list.forEach((s,i)=>{
+      const sc=scoreForStudent(s.n,obj);
+      rows.push([i+1,s.n,periodText(s.from,s.to),sc,'',s.guide||'']);
+    });
+  }
+  rows.push([]);
+  rows.push(['','','Trưởng khoa']);
+  rows.push([]);
+  rows.push([]);
+  rows.push([]);
+  rows.push(['','','Nguyễn Thị Ly Châu']);
+  return {rows,title,list};
+}
+function aoaToWorkbook(rows,sheetName){
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  // column widths
+  ws['!cols']=[{wch:6},{wch:28},{wch:40},{wch:14},{wch:14},{wch:22}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,sheetName||'KetQua');
+  return wb;
+}
+function downloadWorkbook(wb,filename){
+  try{
+    XLSX.writeFile(wb,filename);
+    return true;
+  }catch(e){
+    try{
+      const d=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+      const blob=new Blob([d],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=filename;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+      return true;
+    }catch(e2){alert('Không tải được file: '+e2.message);return false}
+  }
+}
+async function expEnd(obj){
+  if(typeof XLSX==='undefined')return alert('Chưa tải thư viện Excel');
+  const {rows,list}=buildEndSheet(obj);
+  if(!list.length){
+    if(!confirm('Chưa có học viên '+obj+' trong danh sách. Vẫn tạo file mẫu trống?'))return;
+  }
+  const d=new Date();
+  const stamp=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0');
+  const short=obj==='Cử nhân PHCN'?'KTV':(obj==='Y sĩ'?'YSi':'BS');
+  const filename='Ket_qua_'+short+'_cuoi_dot_'+stamp+'.xlsx';
+  const wb=aoaToWorkbook(rows,'KetQua');
+  downloadWorkbook(wb,filename);
+  // Lưu lên Drive
+  if(OK&&ADM){
+    try{
+      const b64=XLSX.write(wb,{type:'base64',bookType:'xlsx'});
+      const r=await api({action:'saveExport'},{pin:ADM,name:filename,data:b64});
+      if(r&&r.ok)toast('Đã lưu lên Drive'+(r.url?' — mở được từ thư mục kết quả thi':''));
+      else toast('Đã tải về máy. Chưa lưu Drive: '+(r&&r.error||''),1);
+    }catch(e){toast('Đã tải về máy. Chưa lưu Drive: '+e.message,1)}
+  }else{
+    toast('Đã tải file về máy'+(ADM?'':' (đăng nhập quản trị để lưu Drive)'));
+  }
+}
+
 
 // ===== Persist view + admin session =====
 const VIEW_KEY='vltl_view', ADM_KEY='vltl_adm';
