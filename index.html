@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi"><head><meta charset="utf-8"><title>Khoa VLTL – PHCN | Quản lý đào tạo</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
 <style>
 :root{--bg:#e9eff7;--card:#f8fafd;--tx:#1e2a3a;--mut:#64748b;--pr:#2b5797;--pr2:#dbe7fb;--bd:#b9cbe6;--ok:#16a34a;--no:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1722;--card:#17212f;--tx:#e6edf7;--mut:#9ab;--pr:#7fb0f0;--pr2:#1e3050;--bd:#2c3f5d}}
@@ -26,6 +28,16 @@ button.s{background:var(--pr2);color:var(--pr)}input,select{padding:8px;border:1
 .hl{text-align:center;color:var(--mut);letter-spacing:4px;font-size:12px;border:1px dashed var(--bd);border-radius:10px;padding:10px}.sh{font-size:11px;color:var(--mut);margin:6px 0 2px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.tabs button.on{background:var(--pr);color:var(--bg)}
 .md{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:9}.md>div{background:var(--card);border-radius:12px;padding:20px;min-width:260px;max-width:90%}
+
+.lgi{width:40px!important;height:40px!important;border-radius:8px;object-fit:contain;background:#fff;padding:2px;flex-shrink:0;display:block;border:1px solid var(--bd)}
+.lg{width:auto!important;max-width:min(520px,62vw)!important}
+.hl-card{box-shadow:0 4px 14px rgba(43,87,151,.18);border:1.5px solid var(--pr)!important;transition:.2s}
+.hl-card:hover{box-shadow:0 6px 20px rgba(43,87,151,.28);transform:translateY(-2px)}
+.wg{text-align:center!important}
+.c h2{text-align:center}.c .mut{text-align:center}
+.wheel-wrap{position:relative;width:340px;height:340px;margin:12px auto}
+.wheel-wrap canvas{border-radius:50%;box-shadow:0 6px 24px rgba(0,0,0,.18);background:#fff}
+.wheel-pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid #d92550;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
 </style></head><body><link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'><style>
 :root{padding:0;--bg:#f1f4f6;--card:#fff;--tx:#495057;--hd:#343a40;--mut:#6c757d;--pr:#3f6ad8;--pr2:#e0e9fb;--bd:#e3e8ee;--sh:0 .47rem 2.2rem rgba(4,9,20,.03),0 .94rem 1.4rem rgba(4,9,20,.03),0 .25rem .53rem rgba(4,9,20,.05),0 .125rem .19rem rgba(4,9,20,.03)}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#10151f;--card:#1a2130;--tx:#c9d1e0;--hd:#e8edf7;--mut:#8b97ad;--pr:#6c93f5;--pr2:#232f4a;--bd:#2a3347}button{color:#0f1722!important}.s{color:var(--pr)!important}}
@@ -78,7 +90,7 @@ table.tb{width:100%;border-collapse:collapse}table.tb td,table.tb th{padding:10p
 .bar{height:10px;border-radius:6px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#3ac47d,#16aaff)}.big{font-size:44px;font-weight:700;color:var(--hd)}
 .bc{margin-bottom:12px}.bc a{color:var(--pr);cursor:pointer;font-size:13px;font-weight:600}
 .tabs button{border-radius:20px}
-</style><div class='hd'><div class='lg'><span class='lgi' id='lgi'></span>VLTL – PHCN</div><button class='hb' onclick=tg() id='hb'></button><div class='us'><div class='ush' style='text-align:right;line-height:1.3'><b style='color:var(--hd)'>Quản trị viên</b><br><span class='mut'>Khoa VLTL – PHCN</span></div><div class='av' onclick=admin()>QT</div></div></div><div class='sb' id='sb'></div><div class='mn'><div class='pt'><div class='pti' id='pti'></div><div><div class='ptt' id='ptt'></div><div class='pts' id='pts'></div></div></div><div id='app'></div></div>
+</style><div class='hd'><div class='lg'><img src='logo.png' alt='Logo BV' class='lgi' id='lgi' onerror="this.style.display='none'"><div style='display:flex;flex-direction:column;line-height:1.25;justify-content:center'><b style='font-size:13px;font-weight:700;color:var(--hd)'>Bệnh viện Y học cổ truyền Thành phố Hồ Chí Minh</b><span style='font-size:13px;font-weight:700;color:var(--hd)'>Khoa Vật lý trị liệu - Phục hồi chức năng</span></div></div><button class='hb' onclick=tg() id='hb'></button><div class='us'><div class='ush' style='text-align:right;line-height:1.3'><b style='color:var(--hd)'>Quản trị viên</b><br><span class='mut'>BS.CKI Trần Cồng Hùng</span></div><div class='av' onclick=admin()>QT</div></div></div><div class='sb' id='sb'></div><div class='mn'><div class='pt'><div class='pti' id='pti'></div><div><div class='ptt' id='ptt'></div><div class='pts' id='pts'></div></div></div><div id='app'></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ====== DỮ LIỆU MẪU – thay bằng dữ liệu thật (hoặc nhập Excel ở mục Quản trị) ======
@@ -502,10 +514,10 @@ KEYS[1].push('tay','dungdi','songsong','dongkhop','momem','chuoi','xelan','kheol
 const IC={home:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',book:'M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z',grid:'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z',user:'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',lock:'M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4',menu:'M3 12h18 M3 6h18 M3 18h18',cross:'M12 5v14 M5 12h14',file:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6'};
 const svg=(n,s=20)=>`<svg width='${s}' height='${s}' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='${IC[n]}'/></svg>`;
 function tg(){document.body.classList.toggle('so')}
-$('#lgi').innerHTML=svg('cross',18);$('#hb').innerHTML=svg('menu');
+/* logo img */$('#hb').innerHTML=svg('menu');
 $('#sb').innerHTML=`<h6>Menu chính</h6><a data-k=home onclick=home()>${svg('home')}Trang chủ</a><a data-k=rules onclick=rules()>${svg('book')}Nội quy</a><a data-k=rooms onclick=rooms()>${svg('grid')}Danh sách phân phòng</a><h6>Đối tượng thực hành</h6>${SUBJ.map((s,i)=>`<a data-k=s${i} onclick=subj(${i})>${svg('user')}${s}</a>`).join('')}<h6>Quản trị</h6><a data-k=admin onclick=admin()>${svg('lock')}Quản trị viên</a>`;
 function T(ic,t,s,k){$('#pti').innerHTML=svg(ic,24);$('#ptt').textContent=t;$('#pts').textContent=s;document.querySelectorAll('.sb a').forEach(a=>a.classList.toggle('on',a.dataset.k==k));document.body.classList.remove('so');window.scrollTo(0,0)}
-function home(){S={};const oc=Object.values(open).filter(o=>o&&o.on).length;A.innerHTML=`<div class='hero'><h2 style='margin:0 0 6px;font-size:20px'>Chào mừng học viên đến thực hành tại khoa VLTL – PHCN</h2><div style='opacity:.9'>Cổng quản lý đào tạo: nội quy, phân phòng, danh mục kỹ thuật, ôn tập và thi kết thúc thực hành.</div></div><div class='gw'><div class='wg g1'><b>10</b><span>Phòng thực hành</span></div><div class='wg g2'><b>4</b><span>Nhóm đối tượng</span></div><div class='wg g3'><b>20</b><span>Bộ đề thi (5 + 10 + 5)</span></div><div class='wg g4'><b>${oc}</b><span>Mục thi đang mở</span></div></div><div class='gw' style='grid-template-columns:repeat(auto-fit,minmax(300px,1fr))'><div class='c' onclick=rules()><h2>Nội quy</h2><div class='mut'>Các học viên bắt buộc tuân thủ đúng các nội quy của Khoa. Bấm để xem nội quy và đơn xin nghỉ phép.</div></div><div class='c' onclick=rooms()><h2>Danh sách phân phòng</h2><div class='mut'>Sơ đồ phòng, nhân sự và học viên theo từng ca.</div></div></div><div class='zone'>Đối tượng thực hành</div><div class='gw'>${SUBJ.map((s,i)=>`<div class='c sj ${['g1','g2','g3','g5'][i]}' onclick=subj(${i})><h2>${s}</h2><div class='mut'>${KEYS[i].length?KEYS[i].length+' kỹ thuật có câu hỏi':'Đang cập nhật'}</div></div>`).join('')}</div>`}
+function home(){S={};const oc=Object.values(open).filter(o=>o&&o.on).length;A.innerHTML=`<div class='hero'><h2 style='margin:0 0 6px;font-size:20px'>Chào mừng học viên đến thực hành tại khoa VLTL – PHCN</h2><div style='opacity:.9'>Cổng quản lý đào tạo: nội quy, phân phòng, danh mục kỹ thuật, ôn tập và thi kết thúc thực hành.</div></div><div class='gw'><div class='wg g1' style='text-align:center'><b style='font-size:13px;font-weight:600;display:block;line-height:1.3'>Trưởng khoa</b><span style='font-size:12px;opacity:.95'>BS.CKII Nguyễn Thị Ly Châu</span></div><div class='wg g2' style='text-align:center'><b style='font-size:13px;font-weight:600;display:block;line-height:1.3'>Phó Trưởng khoa</b><span style='font-size:12px;opacity:.95'>KTY.CKI.PHCN Võ Anh Khoa</span></div><div class='wg g3' style='text-align:center'><b style='font-size:13px;font-weight:600;display:block;line-height:1.3'>Kỹ thuật viên Trưởng khoa</b><span style='font-size:12px;opacity:.95'>KTY.CKI.PHCN Huỳnh Thị Mỹ Hương</span></div><div class='wg g4' style='text-align:center'><b style='font-size:13px;font-weight:600;display:block;line-height:1.3'>Trưởng Đơn vị điều trị đau</b><span style='font-size:12px;opacity:.95'>BS.CKI Lê Hữu Phúc</span></div></div><div class='gw' style='grid-template-columns:repeat(auto-fit,minmax(300px,1fr))'><div class='c hl-card' onclick=rules()><h2>Nội quy</h2><div class='mut'>Các học viên bắt buộc tuân thủ đúng các nội quy của Khoa. Bấm để xem nội quy và đơn xin nghỉ phép.</div></div><div class='c hl-card' onclick=rooms()><h2>Danh sách phân phòng</h2><div class='mut'>Sơ đồ phòng thực hành của các đối tượng học viên</div></div></div><div class='zone'>Đối tượng thực hành</div><div class='gw'>${SUBJ.map((s,i)=>`<div class='c sj ${['g1','g2','g3','g5'][i]}' onclick=subj(${i})><h2 style='text-align:center'>${s}</h2></div>`).join('')}</div>`}
 const wr=(n,f)=>{const o=window[n];window[n]=function(){const r=o.apply(this,arguments);try{f.apply(null,arguments)}catch(e){}return r}};
 wr('home',()=>T('home','Bảng điều khiển','Quản lý đào tạo học viên thực hành','home'));
 wr('rules',()=>T('book','Nội quy','Nội quy và đơn xin nghỉ phép của Khoa','rules'));
@@ -907,9 +919,38 @@ function paperHTML(r){return `<html><head><meta charset='utf-8'><title>Đề thi
 async function saveF(name,data){try{const dl=await claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:name,data})}catch(e){}}
 function dlr(ix){const r=results[ix];if(!r||!r.qs)return alert('Không có dữ liệu đề thi');const sl=r.n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\W+/g,'_');saveF('de_thi_'+sl+'_de'+r.set+'.doc',new TextEncoder().encode(paperHTML(r)))}
 function dlPin(ix){const p=prompt('Mật khẩu quản trị');if(!p)return;if(!OK)return alert('Chưa cấu hình kết nối Google Drive');api({action:'auth'},{pin:p}).then(r=>{if(r.ok)dlr(ix);else alert('Sai mật khẩu')}).catch(()=>alert('Không kết nối được máy chủ'))}
-function admin2(){const rows=[0,1,2].map(i=>LB[i].map((l,li)=>{const o=open[SUBJ[i]+'|'+l]||{on:false,set:1};return `<tr><td>${SUBJ[i]}</td><td>${l}</td><td><label class='sw'><input type=checkbox ${o.on?'checked':''} onchange=setO(${i},${li},this.checked,null)><i></i></label></td><td><select onchange=setO(${i},${li},null,+this.value)>${Array.from({length:NSET[i]},(_,k)=>`<option ${o.set==k+1?'selected':''}>${k+1}</option>`).join('')}</select></td></tr>`}).join('')).join('');
-const rr=results.map((r,i)=>[r,i]).slice(-15).reverse();
-A.innerHTML=back()+`<div class='p'><div class='ch2'>Mở thi và chọn đề</div><div class='ov'><table class='tb'><tr><th>Đối tượng</th><th>Mục thi</th><th>Mở</th><th>Đề số</th></tr>${rows}</table></div><p class='mut'>Cách tính điểm: đúng 65% số câu được 5 điểm; 35% câu còn lại chia đều 5 điểm còn lại, làm tròn 1 chữ số thập phân.</p></div><div class='p'><div class='ch2'>Kết quả thi<span class='pill'>${results.length}</span></div>${rr.length?`<div class='ov'><table class='tb'><tr><th>Họ tên</th><th>Mục</th><th>Đề</th><th>Điểm</th><th></th></tr>${rr.map(([r,i])=>`<tr><td>${r.n}</td><td>${r.t}${r.ph&&r.t=='Cử nhân PHCN'?' · '+r.ph:''}</td><td>${r.set}</td><td><b>${r.sc}</b> (${r.ok}/${r.tot})</td><td>${r.qs?`<button class='s' onclick=dlr(${i})>Tải đề</button>`:''}</td></tr>`).join('')}</table></div>`:'<p class=mut>Chưa có bài thi nào.</p>'}<div style='margin-top:10px;display:flex;gap:8px;flex-wrap:wrap'><button onclick=exp()>Xuất Excel kết quả</button></div></div><div class='p'><div class='ch2'>Danh sách học viên</div><p class='mut'>Excel: Họ tên | Ngày sinh | Từ ngày | Đến ngày | Phòng | Đối tượng</p><input type=file accept='.xlsx,.xls' onchange=imp(this,'sv')></div>`}
+function admin2(){
+  const rows=[0,1,2].map(i=>LB[i].map((l,li)=>{const o=open[SUBJ[i]+'|'+l]||{on:false,set:1};return `<tr><td>${SUBJ[i]}</td><td>${l}</td><td><label class='sw'><input type=checkbox ${o.on?'checked':''} onchange=setO(${i},${li},this.checked,null)><i></i></label></td><td><select onchange=setO(${i},${li},null,+this.value)>${Array.from({length:NSET[i]},(_,k)=>`<option ${o.set==k+1?'selected':''}>${k+1}</option>`).join('')}</select></td></tr>`}).join('')).join('');
+  const rr=results.map((r,i)=>[r,i]).slice(-20).reverse();
+  const wheelRows=[0,1,2].map(i=>`<tr><td>${SUBJ[i]}</td><td>Quay ${(typeof WHEEL_N!=='undefined'?WHEEL_N[i]:3)||3} bảng kiểm</td><td><label class='sw'><input type=checkbox ${typeof wheelEnabled==='function'&&wheelEnabled(i)?'checked':''} onchange="typeof setWheel==='function'&&setWheel(${i},this.checked)"><i></i></label></td></tr>`).join('');
+  const ssLink=window.SS_URL?`<a href="${window.SS_URL}" target="_blank" rel="noopener" style="color:var(--pr);font-weight:600">📊 Mở Google Sheet DS học viên</a>`:'<span class="mut">Link Sheet sẽ hiện sau khi deploy Code.gs mới và tải lại trang</span>';
+  A.innerHTML=back()+`
+  ${typeof aiExamHTML==='function'?aiExamHTML():''}
+  <div class='p'><div class='ch2'>Vòng quay bảng kiểm QTKT – bật / tắt</div>
+    <div class='ov'><table class='tb'><tr><th>Đối tượng</th><th>Số bảng kiểm</th><th>Bật</th></tr>${wheelRows}</table></div>
+    <p class='mut'>Khi bật, học viên vào trang đối tượng sẽ thấy vòng quay. Kết quả (số + tên + link Drive) được lưu để tra cứu.</p>
+  </div>
+  <div class='p'><div class='ch2'>Mở thi và chọn đề</div>
+    <div class='ov'><table class='tb'><tr><th>Đối tượng</th><th>Mục thi</th><th>Mở</th><th>Đề số</th></tr>${rows}</table></div>
+    <p class='mut'>Cách tính điểm: đúng 65% số câu → 5 điểm; phần còn lại chia đều đến 10.</p>
+  </div>
+  <div class='p'><div class='ch2'>Danh sách học viên (Google Sheet)</div>
+    <p class='mut'>Danh sách lưu trên Google Sheet. Nhấn để mở xem / chỉnh trên Drive.</p>
+    <div style="margin:8px 0">${ssLink}</div>
+    <details style="margin-top:8px"><summary class="mut" style="cursor:pointer">Nhập thêm từ Excel (tùy chọn)</summary>
+      <p class="mut">Cột: Họ tên | Ngày sinh | Từ ngày | Đến ngày | Phòng | Đối tượng</p>
+      <input type=file accept='.xlsx,.xls' onchange=imp(this,'sv')>
+    </details>
+  </div>
+  <div class='p'><div class='ch2'>Kết quả thi<span class='pill'>${results.length}</span></div>
+    ${rr.length?`<div class='ov'><table class='tb'><tr><th>Họ tên</th><th>Mục</th><th>Đề</th><th>Điểm</th><th></th></tr>${rr.map(([r,i])=>`<tr><td>${r.n}</td><td>${r.t}${r.ph&&r.t=='Cử nhân PHCN'?' · '+r.ph:''}</td><td>${r.set||'—'}</td><td><b>${r.sc!=null?r.sc:'—'}</b>${r.tot?` (${r.ok}/${r.tot})`:''}</td><td>${r.qs?`<button class='s' onclick=dlr(${i})>Tải đề</button>`:''}</td></tr>`).join('')}</table></div>`:'<p class=mut>Chưa có bài thi nào.</p>'}
+    <div style='margin-top:10px'><button onclick=exp()>Xuất Excel kết quả</button></div>
+  </div>
+  <div class='p' style='display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-style:dashed'>
+    <div><div class='ch2' style='margin:0'>Phiên quản trị</div><p class='mut' style='margin:4px 0 0'>Đang đăng nhập. Thoát khi không dùng nữa.</p></div>
+    <button class='s' onclick=logoutAdm() style='border-color:#d92550;color:#d92550'>Thoát quản trị</button>
+  </div>`;
+}
 const OK=!/DÁN_/.test(API);let ADM='',FILES=[];
 const nz=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 async function api(p,body){const u=API+'?'+new URLSearchParams(Object.assign({token:TOKEN},p)).toString();const r=await fetch(u,body?{method:'POST',body:JSON.stringify(body)}:{});return r.json()}
@@ -967,8 +1008,8 @@ function roomEnts(day){const L=[];RAI.forEach(([id])=>((SCH[day]||{})[id]||'').s
 function roomsFromAssign(day,assign){const ents=roomEnts(day),ids=RAI.map(r=>r[0]),nd={};ids.forEach(i=>nd[i]=[]);for(let k=0;k<ents.length;k++){const v=assign['H'+(k+1)];if(ids.indexOf(v)<0)return null;nd[v].push(ents[k])}return nd}
 async function aiRooms(){const o=document.getElementById('aiw'),t=(document.getElementById('air').value||'').trim()||'Chia đều vào các phòng',day=TAB,ents=roomEnts(day);if(!ents.length){o.innerHTML='<p class=mut>Tab này chưa có học viên để phân.</p>';return}o.innerHTML='<span class=mut>Đang hỏi trợ lý AI…</span>';try{const r=await api({action:'aiRooms'},{pin:ADM,text:t,rooms:RAI.map(([id,name])=>({id,name})),students:ents.map((e,k)=>({id:'H'+(k+1),role:roleOf(e),note:e.split('|')[1]||''}))});if(r.error)throw new Error(r.error);const nd=roomsFromAssign(day,r.assign||{});if(!nd)throw new Error('AI trả kết quả chưa hợp lệ, hãy thử lại');AIR={day,nd};o.innerHTML=`<table class='tb'><tr><th>Phòng</th><th>Số HV</th><th>Học viên</th></tr>${RAI.filter(([id])=>nd[id].length).map(([id,name])=>`<tr><td>${name}</td><td><b>${nd[id].length}</b></td><td>${nd[id].map(e=>esc(e.replace('|',' · '))).join(', ')}</td></tr>`).join('')}</table><button style='margin-top:8px' onclick=applyAiRooms()>Áp dụng phân phòng này</button><p class=mut>${esc(r.note||'')}</p>`}catch(e){o.innerHTML=`<p style='color:#d92550'>${esc(e.message)}</p>`}}
 function applyAiRooms(){if(!AIR)return;const{day,nd}=AIR;const nv={};Object.keys(nd).forEach(k=>nv[k]=nd[k].join(','));SCH[day]=nv;api({action:'saveRooms'},{pin:ADM,rooms:{[day]:nv}}).then(r=>toast(r.ok?'Đã áp dụng và lưu phân phòng':'Đã áp dụng trên máy này, chưa lưu được: '+(r.error||'lỗi'),!r.ok)).catch(e=>toast('Chưa lưu được: '+e.message,1));AIR=null;rooms()}
-const _a3=admin2;admin2=function(){_a3();const f=A.querySelector('.p');if(f)f.insertAdjacentHTML('afterend',aiExamHTML())};
-wr('rooms',()=>{if(ADM){const f=A.querySelector('.p');if(f)f.insertAdjacentHTML('afterend',aiRoomHTML())}});
+/* AI already in admin2 */
+/* AI rooms in rooms() */
 const fold=x=>x.normalize('NFC').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D');
 function stripRole(e){return e.split('|')[0].replace(/^(CCHN KTV|CCHN YS|BS|YS|KTV|CN|SV)\s+/i,'').trim()}
 function roomEntsR(day){const L=[];RAI.forEach(([id])=>((SCH[day]||{})[id]||'').split(',').filter(x=>x).forEach(e=>L.push({e,room:id})));return L}
@@ -1005,7 +1046,23 @@ function chipPool(x){const k=skey(x),mt=META[k]||{};return `<span class='chp ${a
 function roomCard(id,name){const L=(RM[TAB]||{})[id]||[];return `<div class='rm' data-drop="${id}"><h3>${name}<span>${L.length} học viên</span></h3>${L.length?L.map((p,i)=>chipP(p,id,i)).join(''):`<span class='mut'>${ADM?'Kéo học viên vào đây':'Chưa có học viên'}</span>`}</div>`}
 function poolCard(){const un=students.filter(x=>!placed(x)),g={BS:[],KTV:[],YS:[]};un.forEach(x=>g[abbr(x)].push(x));const col=(a,t)=>`<div class='pc'><b>${t}</b> <span class='pill'>${g[a].length}</span><div style='margin-top:6px'>${g[a].map(chipPool).join('')||'<span class=mut>—</span>'}</div></div>`;const rem=REMOVED.map(k=>{const x=STU_RAW.find(y=>skey(y)===k);return x?`<div class='tr' style='cursor:default'><span class='tn'>${esc(x.n)}</span><button class='s' onclick=restoreStu(this.dataset.k) data-k="${escA(k)}">Khôi phục</button></div>`:''}).join('');return `<div class='p' data-drop="pool"><div class='ch2'>Học viên chưa phân phòng<span class='pill'>${un.length}</span></div><div class='pool3'>${col('BS','Bác sĩ')}${col('KTV','KTY PHCN')}${col('YS','Y sĩ')}</div><div style='display:flex;gap:6px;margin-top:10px;flex-wrap:wrap'><input id=xn class='fi' placeholder='Gõ thêm tên học viên…' style='flex:1;min-width:180px;margin:0'><select id=xt class='fi' style='width:auto;margin:0'><option value=BS>BS</option><option value=KTV>KTV</option><option value=YS>YS</option></select><button onclick=addExtra()>Thêm</button></div>${rem?`<details style='margin-top:10px'><summary class='mut' style='cursor:pointer'>Học viên đã xóa (${REMOVED.length}) – khôi phục</summary>${rem}</details>`:''}</div>`}
 function expiredCard(){const L=students.filter(expired);if(!L.length)return'';return `<div class='p' style='border-left:4px solid #d92550'><div class='ch2' style='color:#d92550'>⚠ ${L.length} học viên đã hết thời gian thực tập – nên xóa khỏi danh sách</div>${L.map(x=>`<div class='tr' style='cursor:default'><span class='tn'>${esc(abbr(x)+' '+x.n)} <span class='mut'>(đến ${esc(x.to)})</span></span><button style='background:#d92550;box-shadow:none' data-k="${escA(skey(x))}" onclick=delStuBtn(this.dataset.k)>Xóa</button></div>`).join('')}</div>`}
-function rooms(){const Tb=weekLabels(),R=(id,n)=>roomCard(id,n);A.innerHTML=back()+`<div class='p'><div class='tabs' style='margin:0 0 6px'>${TK.map((k,x)=>`<button class='${k==TAB?'on':'s'}' onclick=setTab(${x})>${Tb[k]}</button>`).join('')}</div><div class='mut'>${ADM?'Quản trị: nhấn giữ tên rồi kéo vào phòng khác (hoặc thả về ô “chưa phân phòng”); bấm vào tên để sửa ghi chú, nghỉ bù, dấu *.':'Danh sách học viên theo phòng.'}</div></div>`+(ADM?expiredCard()+poolCard():'')+`<div class='p'><div class='ch2'>Khu N4</div><div class='n4'><div class='stk'>${R('201-202','P.201 - 202')}${R('208-209','P.208 - 209')}</div><div class='hw'>HÀNH LANG</div><div class='stk'>${R('204-206','P.204 - 206')}${R('207A','P.207A')}${R('207B','P.207B')}</div></div></div><div class='p'><div class='ch2'>Khu N6</div><div class='cols'>${R('6.216','P.6.216')}${R('6.215','P.6.215')}${R('6.214','P.6.214')}${R('6.213','P.6.213')}</div></div><div class='al'>Lưu ý: Các bạn có dấu <b style='color:#d92550'>*</b> đúng 07h phải có mặt tại phòng được phân công. Lúc 11h đến 11h30 ở phòng 207A.</div>`}
+function rooms(){
+  const Tb=weekLabels(),R=(id,n)=>roomCard(id,n);
+  const adminTop = ADM ? (
+    (typeof aiRoomHTML==='function'?aiRoomHTML():'') +
+    `<div class='p'><div class='ch2'>Công cụ phân phòng (quản trị)</div>
+      <p class='mut'>Kéo-thả tên học viên · Bấm tên để sửa ghi chú / dấu * / đổi phòng · Sửa Lưu ý bên dưới.</p>
+      <div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:6px'>
+        <button class='s' onclick=editNote()>✎ Sửa dòng Lưu ý</button>
+        <button class='s' onclick=rooms()>⟳ Làm mới</button>
+      </div>
+    </div>` +
+    (typeof expiredCard==='function'?expiredCard():'') +
+    (typeof poolCard==='function'?poolCard():'')
+  ) : '';
+  A.innerHTML=back()+adminTop+`<div class='p'><div class='tabs' style='margin:0 0 6px'>${TK.map((k,x)=>`<button class='${k==TAB?'on':'s'}' onclick=setTab(${x})>${Tb[k]}</button>`).join('')}</div><div class='mut'>${ADM?'Quản trị: nhấn giữ tên rồi kéo vào phòng; bấm tên để sửa ghi chú, dấu *, đổi phòng.':'Danh sách học viên theo phòng.'}</div></div><div class='p'><div class='ch2'>Khu N4</div><div class='n4'><div class='stk'>${R('201-202','P.201 - 202')}${R('208-209','P.208 - 209')}</div><div class='hw'>HÀNH LANG</div><div class='stk'>${R('204-206','P.204 - 206')}${R('207A','P.207A')}${R('207B','P.207B')}</div></div></div><div class='p'><div class='ch2'>Khu N6</div><div class='cols'>${R('6.216','P.6.216')}${R('6.215','P.6.215')}${R('6.214','P.6.214')}${R('6.213','P.6.213')}</div></div><div class='al' id='noteBox'>${(META._note||'Lưu ý: Các bạn có dấu <b style="color:#d92550">*</b> đúng 07h phải có mặt tại phòng được phân công. Lúc 11h đến 11h30 ở phòng 207A.')}</div>${ADM?`<div style='margin-top:8px'><button class='s' onclick=editNote()>✎ Sửa dòng Lưu ý</button></div>`:''}`;
+  if(typeof startRoomsPoll==='function')startRoomsPoll();
+}
 function saveRooms(day){if(!OK||!ADM)return;api({action:'saveRooms2'},{pin:ADM,day,rooms:RM[day]||{}}).then(r=>{if(!r.ok)toast('Chưa lưu được: '+(r.error||'lỗi'),1)}).catch(e=>toast('Chưa lưu được: '+e.message,1))}
 function saveMeta(){if(!OK||!ADM)return;api({action:'saveMeta'},{pin:ADM,meta:META,removed:REMOVED,extra:EXTRA}).then(r=>{if(!r.ok)toast('Chưa lưu được: '+(r.error||'lỗi'),1)}).catch(e=>toast('Chưa lưu được: '+e.message,1))}
 function dropTo(d,to){const day=TAB;RM[day]=RM[day]||{};const src=d.from?RM[day][d.from]:null;if(to==='pool'){if(src)src.splice(d.idx,1)}else{if(d.from===to)return;let p={k:d.k,note:''};if(src)p=src.splice(d.idx,1)[0]||p;const dst=RM[day][to]=RM[day][to]||[];if(!dst.some(y=>y.k===p.k&&y.note===p.note))dst.push(p)}saveRooms(day);rooms()}
@@ -1035,5 +1092,287 @@ function maskText2(text,items){const orig=text.normalize('NFC'),f=fold(orig).toL
 function aiRoomHTML(){return `<div class='p'><div class='ch2'>Trợ lý AI – điều động học viên vào phòng<span class='pill'>Gemini</span></div><p class='mut'>Trợ lý xếp học viên của tab đang xem (cả người chưa phân phòng). Tên học viên không gửi cho AI, chỉ gửi mã ẩn danh, chức danh và ghi chú ca. Ví dụ: “Chuyển BS Khanh sang P.201 - 202” hoặc “Xếp các bạn chưa phân phòng vào P.207A và P.208 - 209, mỗi phòng tối đa 8 người”.</p><textarea id=air rows=2 placeholder='Nhập yêu cầu…' style='width:100%;padding:9px;border:1px solid #ced4da;border-radius:4px;background:var(--card);color:var(--tx);margin-bottom:8px'></textarea><button onclick=aiRooms()>Đề xuất phân phòng</button><div id=aiw style='margin-top:10px'></div></div>`}
 async function aiRooms(){const o=document.getElementById('aiw'),raw=(document.getElementById('air').value||'').trim()||'Chia đều vào các phòng',day=TAB,E=aiEnts(day);if(!E.length){o.innerHTML='<p class=mut>Tab này chưa có học viên để phân.</p>';return}o.innerHTML='<span class=mut>Đang hỏi trợ lý AI…</span>';try{const items=[];E.forEach((e,i)=>nameVariants(e.k).forEach(n=>items.push({name:n,id:'H'+(i+1)})));const r=await api({action:'aiRooms'},{pin:ADM,text:maskText2(raw,items),rooms:RAI.map(([id,name])=>({id,name})),students:E.map((e,i)=>{const x=studentByKey(e.k);return{id:'H'+(i+1),role:x?abbr(x):'khác',note:e.note,cur:e.room}})});if(r.error)throw new Error(r.error);const ids=RAI.map(a=>a[0]),a=r.assign||{};for(let i=0;i<E.length;i++){const v=a['H'+(i+1)];if(v!=='none'&&ids.indexOf(v)<0)throw new Error('AI trả kết quả chưa hợp lệ, hãy thử lại')}AIR={day,E,a};const nm=Object.fromEntries(RAI);nm.none='Chưa phân phòng';const mv=E.map((e,i)=>({e,to:a['H'+(i+1)]})).filter(m=>m.e.room!==m.to);o.innerHTML=(mv.length?`<p><b>${mv.length}</b> thay đổi:</p><table class='tb'><tr><th>Học viên</th><th>Từ</th><th>Sang</th></tr>${mv.map(m=>{const x=studentByKey(m.e.k);return `<tr><td>${esc(x?abbr(x)+' '+(NAMES[m.e.k]||x.n):m.e.k)}${m.e.note?' · '+esc(m.e.note):''}</td><td>${nm[m.e.room]}</td><td><b>${nm[m.to]}</b></td></tr>`}).join('')}</table><button style='margin-top:8px' onclick=applyAiRooms()>Áp dụng phân phòng này</button>`:'<p class=mut>Không có thay đổi nào.</p>')+`<p class=mut>${esc(r.note||'')}</p>`}catch(e){o.innerHTML=`<p style='color:#d92550'>${esc(e.message)}</p>`}}
 function applyAiRooms(){if(!AIR)return;const{day,E,a}=AIR,nd={};E.forEach((e,i)=>{const v=a['H'+(i+1)];if(v!=='none')(nd[v]=nd[v]||[]).push({k:e.k,note:e.note})});RM[day]=nd;saveRooms(day);AIR=null;toast('Đã áp dụng phân phòng');rooms()}
-home();boot();
+
+// ===== Lưu ý editable =====
+function editNote(){const cur=META._note||'Lưu ý: Các bạn có dấu * đúng 07h phải có mặt tại phòng được phân công. Lúc 11h đến 11h30 ở phòng 207A.';const t=prompt('Sửa nội dung Lưu ý:',String(cur).replace(/<[^>]+>/g,''));if(t===null)return;META._note=t;if(typeof saveMeta==='function')saveMeta();rooms();if(typeof toast==='function')toast('Đã lưu Lưu ý')}
+
+// ===== Đổi phòng =====
+function stuMove(){const to=(document.getElementById('sm')||{}).value;if(!to)return alert('Chọn phòng mới');const{k,room,idx}=SP;const src=(RM[TAB]||{})[room]||[];const p=src.splice(idx,1)[0];if(!p)return;const dst=RM[TAB][to]=RM[TAB][to]||[];if(!dst.some(y=>y.k===p.k&&y.note===p.note))dst.push(p);saveRooms(TAB);stuClose();const y=window.scrollY;rooms();requestAnimationFrame(()=>window.scrollTo(0,y));toast('Đã chuyển phòng')}
+
+// ===== Auto refresh rooms =====
+let _roomsTimer=null;
+function startRoomsPoll(){clearInterval(_roomsTimer);_roomsTimer=setInterval(async()=>{
+  if(!OK)return;
+  try{
+    const v=JSON.parse(localStorage.getItem('vltl_view')||'null');
+    if(!v||v.k!=='rooms'){clearInterval(_roomsTimer);return}
+    const cfg=await api({action:'config'});
+    if(cfg.rooms2){const prev=JSON.stringify(RM);RM=Object.assign({w:{},t7:{},cn:{}},cfg.rooms2);if(JSON.stringify(RM)!==prev){const y=window.scrollY;rooms();requestAnimationFrame(()=>window.scrollTo(0,y))}}
+    if(cfg.ssUrl)window.SS_URL=cfg.ssUrl;
+  }catch(e){}
+},20000)}
+
+// ===== Vòng quay QTKT (Wheel of Names) =====
+const WHEEL_N={0:3,1:8,2:3};
+const WHEEL_COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#e91e63','#00bcd4','#8bc34a','#ff5722','#673ab7','#009688','#ff9800','#607d8b'];
+function wheelEnabled(si){return !!(open['wheel|'+SUBJ[si]]&&open['wheel|'+SUBJ[si]].on)}
+function setWheel(si,on){open['wheel|'+SUBJ[si]]={on:!!on};SV('open',open);if(OK&&ADM)api({action:'setConfig'},{pin:ADM,open:open}).catch(()=>{});toast(on?'Đã bật vòng quay cho '+SUBJ[si]:'Đã tắt vòng quay')}
+function wheelBkList(si){
+  const L=[],seen={};
+  (TECH[si]||[]).forEach((t,i)=>{
+    const num=String(typeof tnu==='function'?tnu(t):(i+1));
+    const name=typeof tnm==='function'?tnm(t):(Array.isArray(t)?String(t[0]):String(t));
+    const f=typeof bkFile==='function'?bkFile(si,num):null;
+    const key=num+'|'+name;
+    if(!seen[key]){seen[key]=1;L.push({k:num,name,id:f?f.id:null,num})}
+  });
+  if(typeof subjFiles==='function'){
+    subjFiles(si,'bang kiem',false).forEach(f=>{
+      if(L.some(x=>x.id===f.id))return;
+      const name=f.name.replace(/\.pdf$/i,'');
+      const m=name.match(/(\d+)/);
+      L.push({k:m?m[1]:name,name,id:f.id,num:m?m[1]:''});
+    });
+  }
+  return L;
+}
+function getWheelLog(){return LS('wheel_log',[])}
+function findWheelForStudent(si,n,d){
+  const nn=(typeof norm==='function'?norm(n):String(n||'').trim().toLowerCase());
+  const dd=(typeof norm==='function'?norm(d||''):String(d||'').trim().toLowerCase());
+  return getWheelLog().filter(r=>r.t===SUBJ[si]&&(typeof norm==='function'?norm(r.n):String(r.n).toLowerCase())===nn&&(!dd||(typeof norm==='function'?norm(r.d||''):'')===dd)).pop()||null;
+}
+function spinWheel(si){
+  if(!wheelEnabled(si))return alert('Quản trị viên chưa mở vòng quay cho đối tượng này');
+  const need=WHEEL_N[si]||3;
+  const all=wheelBkList(si);
+  if(all.length<need)return alert('Chưa đủ bảng kiểm trên Drive (cần ít nhất '+need+')');
+  showWheelUI(si,all,need);
+}
+function showWheelUI(si,all,need){
+  const labels=all.map((p,i)=>({...p,color:WHEEL_COLORS[i%WHEEL_COLORS.length]}));
+  A.innerHTML=back()+`<div class='p' style='max-width:640px;margin:0 auto;text-align:center'>
+    <div class='ch2' style='justify-content:center'>Vòng quay bảng kiểm – ${SUBJ[si]}</div>
+    <p class='mut'>Sẽ chọn ngẫu nhiên <b>${need}</b> bảng kiểm khác nhau</p>
+    <div style='display:flex;flex-direction:column;gap:10px;margin:12px auto;text-align:left;max-width:360px'>
+      <label class='lbl'>Họ và tên học viên</label><input class='fi' id='wn' placeholder='Nguyễn Văn A'>
+      <label class='lbl'>Ngày sinh (dd/mm/yyyy)</label><input class='fi' id='wd' placeholder='01/01/2000'>
+    </div>
+    <div class='wheel-wrap'><div class='wheel-pointer'></div><canvas id='wcanvas' width='340' height='340'></canvas></div>
+    <div style='margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap'>
+      <button id='wspin' onclick='runWheelSpin(${si},${need})'>🎲 QUAY</button>
+      <button class='s' onclick='subj(${si})'>← Quay lại</button>
+    </div>
+    <div id='wresult' style='margin-top:16px;text-align:left'></div>
+  </div>`;
+  window._wLabels=labels;window._wAngle=0;window._wSpinning=false;drawWheel(0);
+}
+function drawWheel(angle){
+  const canvas=document.getElementById('wcanvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d'),cx=170,cy=170,R=160;
+  const L=window._wLabels||[],n=L.length||1;
+  ctx.clearRect(0,0,340,340);
+  const slice=2*Math.PI/n;
+  for(let i=0;i<n;i++){
+    const a0=angle+i*slice-Math.PI/2,a1=a0+slice;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,a0,a1);ctx.closePath();
+    ctx.fillStyle=L[i].color;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=2;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(a0+slice/2);ctx.textAlign='right';ctx.fillStyle='#fff';ctx.font='bold 11px system-ui,sans-serif';
+    const label=(L[i].num?L[i].num+'. ':'')+L[i].name;
+    ctx.fillText(label.length>22?label.slice(0,20)+'…':label,R-12,4);ctx.restore();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,28,0,2*Math.PI);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#2b5797';ctx.lineWidth=3;ctx.stroke();
+  ctx.fillStyle='#2b5797';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText('QTKT',cx,cy+4);
+}
+function runWheelSpin(si,need){
+  if(window._wSpinning)return;
+  const n=(document.getElementById('wn').value||'').trim();
+  const d=(document.getElementById('wd').value||'').trim();
+  if(!n)return alert('Vui lòng nhập họ tên học viên');
+  const L=window._wLabels||[];
+  if(L.length<need)return alert('Không đủ bảng kiểm');
+  window._wSpinning=true;
+  const btn=document.getElementById('wspin');if(btn)btn.disabled=true;
+  const pool=L.slice();
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+  const picked=pool.slice(0,need);
+  const turns=5+Math.random()*3;
+  const targetIdx=Math.max(0,L.indexOf(picked[0]));
+  const slice=2*Math.PI/L.length;
+  const targetAngle=turns*2*Math.PI-(targetIdx*slice+slice/2);
+  const start=performance.now(),dur=4200,startAng=window._wAngle||0;
+  const ease=t=>1-Math.pow(1-t,3);
+  (function frame(now){
+    const t=Math.min(1,(now-start)/dur);
+    const ang=startAng+(targetAngle-startAng)*ease(t);
+    window._wAngle=ang;drawWheel(ang);
+    if(t<1)requestAnimationFrame(frame);
+    else{window._wSpinning=false;if(btn)btn.disabled=false;finishWheel(si,n,d,picked)}
+  })(start);
+}
+function finishWheel(si,n,d,picked){
+  const rec={n,d,t:SUBJ[si],at:new Date().toLocaleString('vi-VN'),items:picked.map(p=>({num:p.num,name:p.name,id:p.id})),type:'wheel'};
+  results.push({n,d,t:SUBJ[si],at:rec.at,items:rec.items.map(x=>x.name),type:'wheel',sc:'—',ok:0,tot:0,set:'QTKT'});
+  SV('res',results);
+  try{const w=getWheelLog();w.push(rec);SV('wheel_log',w)}catch(e){}
+  if(OK)api({action:'saveWheel'},{n,d,t:SUBJ[si],items:picked.map(p=>(p.num?p.num+'. ':'')+p.name)}).catch(()=>{});
+  const box=document.getElementById('wresult');
+  if(box){
+    box.innerHTML=`<div class='al' style='background:linear-gradient(135deg,#e8f5e9,#e3f2fd)'>Kết quả quay cho <b>${esc(n)}</b>${d?' · '+esc(d):''}</div>
+    <div class='p' style='margin-top:8px'><div class='ch2'>Bảng kiểm được chọn (${picked.length})</div>
+    <ol style='line-height:1.9;padding-left:20px'>${picked.map(p=>`<li><b>${p.num?p.num+'. ':''}${esc(p.name)}</b>
+      ${p.id?`<div style='margin:4px 0 8px;display:flex;gap:8px;flex-wrap:wrap'>
+        <a class='pill' style='cursor:pointer;text-decoration:none' href='#' onclick="openF('${p.id}','${esc(p.name).replace(/'/g,'')}');return false">👁 Xem trên Drive</a>
+        <a class='pill' style='cursor:pointer;text-decoration:none' href='https://drive.google.com/uc?export=download&id=${p.id}' target='_blank'>⬇ Tải về</a>
+      </div>`:'<div class="mut">Chưa gắn file Drive</div>'}</li>`).join('')}
+    </ol></div>`;
+  }
+  toast('Đã lưu kết quả quay');
+}
+function lookupWheel(si){
+  const n=(document.getElementById('wln').value||'').trim();
+  const d=(document.getElementById('wld').value||'').trim();
+  const out=document.getElementById('wlout');
+  if(!n){out.innerHTML='<p class=mut>Nhập họ tên.</p>';return}
+  const rec=findWheelForStudent(si,n,d);
+  if(!rec){out.innerHTML='<p class=mut>Chưa có kết quả quay cho học viên này.</p>';return}
+  const items=rec.items||[];
+  out.innerHTML=`<div class='al'>Kết quả lúc ${esc(rec.at||'')}</div>
+  <ol style='line-height:1.9'>${items.map(it=>{
+    const num=typeof it==='object'?(it.num||''):'';
+    const name=typeof it==='object'?it.name:it;
+    const id=typeof it==='object'?it.id:null;
+    return `<li><b>${num?num+'. ':''}${esc(name)}</b>
+      ${id?`<div style='display:flex;gap:8px;margin:4px 0 8px;flex-wrap:wrap'>
+        <a class='pill' style='cursor:pointer;text-decoration:none' href='#' onclick="openF('${id}','${esc(name).replace(/'/g,'')}');return false">👁 Xem</a>
+        <a class='pill' style='cursor:pointer;text-decoration:none' href='https://drive.google.com/uc?export=download&id=${id}' target='_blank'>⬇ Tải</a>
+      </div>`:''}</li>`;
+  }).join('')}</ol>`;
+}
+function wheelResultHTML(si){
+  return `<div class='p'><div class='ch2'>Bảng kiểm QTKT đã quay</div>
+    <p class='mut'>Nhập họ tên để xem các bảng kiểm đã quay (số, tên, link Drive).</p>
+    <div style='display:flex;gap:8px;flex-wrap:wrap;align-items:end'>
+      <div style='flex:1;min-width:140px'><label class='lbl'>Họ tên</label><input class='fi' id='wln' placeholder='Họ tên'></div>
+      <div style='flex:1;min-width:120px'><label class='lbl'>Ngày sinh</label><input class='fi' id='wld' placeholder='dd/mm/yyyy'></div>
+      <button class='s' onclick='lookupWheel(${si})'>Xem</button>
+    </div>
+    <div id='wlout' style='margin-top:10px'></div>
+  </div>`;
+}
+function wheelHTML(si){
+  const lookup=wheelResultHTML(si);
+  if(!wheelEnabled(si)) return lookup;
+  const n=WHEEL_N[si]||3;
+  return `<div class='p' style='border:2px solid var(--pr);background:linear-gradient(180deg,#f0f6ff,#fff);box-shadow:0 4px 16px rgba(43,87,151,.12)'>
+    <div class='ch2'>Vòng quay bảng kiểm QTKT</div>
+    <p class='mut'>Quay ngẫu nhiên <b>${n}</b> bảng kiểm. Kết quả có số thứ tự, tên và link Drive.</p>
+    <button onclick=spinWheel(${si}) style='width:100%;font-size:16px;padding:12px'>🎲 Mở vòng quay – chọn ${n} bảng kiểm</button>
+  </div>`+lookup;
+}
+
+// ===== Persist view + admin session =====
+const VIEW_KEY='vltl_view', ADM_KEY='vltl_adm';
+function saveView(k,arg){try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:k||'home',arg:arg||null,t:Date.now()}))}catch(e){}}
+function restoreView(){
+  try{
+    const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');
+    if(!v||!v.k){home();return}
+    if(v.k==='home')home();
+    else if(v.k==='rules')rules();
+    else if(v.k==='rooms')rooms();
+    else if(v.k&&v.k.startsWith('s')&&v.k.length<=3)subj(+v.k.slice(1));
+    else if(v.k==='admin'&&ADM)admin2();
+    else home();
+  }catch(e){home()}
+}
+try{const a=sessionStorage.getItem(ADM_KEY);if(a)ADM=a}catch(e){}
+function setAdm(p){ADM=p;try{if(p)sessionStorage.setItem(ADM_KEY,p);else sessionStorage.removeItem(ADM_KEY)}catch(e){}}
+function logoutAdm(){setAdm(null);toast('Đã thoát quản trị');try{const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');if(v&&v.k==='rooms')rooms();else home()}catch(e){home()}}
+
+// Patch navigation
+const _home=home,_rules=rules,_rooms=rooms,_subj=subj,_admin2=typeof admin2==='function'?admin2:null;
+home=function(){saveView('home');_home.apply(this,arguments)};
+rules=function(){saveView('rules');_rules.apply(this,arguments)};
+rooms=function(){saveView('rooms');const y=window.scrollY;_rooms.apply(this,arguments);requestAnimationFrame(()=>window.scrollTo(0,y))};
+subj=function(i){saveView('s'+i);_subj.apply(this,arguments)};
+if(_admin2)admin2=function(){saveView('admin');_admin2.apply(this,arguments)};
+
+// Patch admin login to stay on page
+const _admin=admin;
+admin=function(){
+  if(ADM){admin2();return}
+  const p=prompt('Mật khẩu quản trị');if(!p)return;
+  if(!OK)return alert('Chưa cấu hình kết nối Google Drive (API)');
+  api({action:'auth'},{pin:p}).then(r=>{
+    if(r.ok){
+      setAdm(p);toast('Đã đăng nhập quản trị');
+      try{
+        const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');
+        if(v&&v.k==='rooms')rooms();
+        else if(v&&v.k&&v.k.startsWith('s'))subj(+v.k.slice(1));
+        else if(v&&v.k==='admin')admin2();
+      }catch(e){}
+    }else alert('Sai mật khẩu')
+  }).catch(()=>alert('Không kết nối được máy chủ Drive'));
+};
+
+// Patch boot to store SS_URL and re-render
+const _boot=boot;
+boot=async function(){
+  try{await _boot.apply(this,arguments)}catch(e){}
+  try{
+    const cfg=await api({action:'config'});
+    if(cfg&&cfg.ssUrl)window.SS_URL=cfg.ssUrl;
+    if(cfg&&cfg.rooms2)RM=Object.assign({w:{},t7:{},cn:{}},cfg.rooms2);
+    if(cfg&&cfg.open)open=Object.assign(open,cfg.open);
+  }catch(e){}
+  try{
+    const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');
+    if(v&&v.k==='rooms')rooms();
+    else if(v&&v.k&&v.k.startsWith('s'))subj(+v.k.slice(1));
+  }catch(e){}
+};
+
+// Keep scroll on drop
+if(typeof dropTo==='function'){
+  const _dropTo=dropTo;
+  dropTo=function(d,to){const y=window.scrollY;_dropTo(d,to);requestAnimationFrame(()=>window.scrollTo(0,y))};
+}
+
+// Inject Đổi phòng into openStu if not present
+if(typeof openStu==='function' && !/stuMove/.test(String(openStu))){
+  const _openStu=openStu;
+  openStu=function(k,room,idx){
+    _openStu(k,room,idx);
+    if(!ADM||!room)return;
+    const box=document.querySelector('.md div');
+    if(!box||box.querySelector('#sm'))return;
+    const others=(typeof RAI!=='undefined'?RAI:[]).filter(([id])=>id!==room);
+    const div=document.createElement('div');
+    div.innerHTML=`<label class='lbl'>Đổi phòng</label><div style='display:flex;gap:6px'><select id=sm class='fi' style='margin:0'><option value=''>— Chọn phòng mới —</option>${others.map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select><button class='s' onclick=stuMove()>Chuyển</button></div>`;
+    const unp=box.querySelector('button[onclick*=stuUnplace]');
+    if(unp)unp.parentNode.insertBefore(div,unp);
+    else box.appendChild(div);
+  };
+}
+
+// Inject wheelHTML into subj pages
+const _subj2=subj;
+subj=function(i){
+  _subj2(i);
+  try{
+    if(typeof wheelHTML==='function'){
+      const html=wheelHTML(i);
+      const first=A.querySelector('.p, .gw, .cg, h1');
+      if(first)first.insertAdjacentHTML('beforebegin', html);
+      else A.insertAdjacentHTML('beforeend', html);
+    }
+  }catch(e){}
+};
+
+restoreView();
+boot();
 </script></body></html>
+
