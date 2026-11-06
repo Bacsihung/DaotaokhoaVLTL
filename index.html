@@ -29,7 +29,7 @@ button.s{background:var(--pr2);color:var(--pr)}input,select{padding:8px;border:1
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.tabs button.on{background:var(--pr);color:var(--bg)}
 .md{position:fixed;inset:0;background:#0007;display:flex;align-items:center;justify-content:center;z-index:9}.md>div{background:var(--card);border-radius:12px;padding:20px;min-width:260px;max-width:90%}
 
-.lgi{width:40px!important;height:40px!important;border-radius:8px;object-fit:contain;background:#fff;padding:2px;flex-shrink:0;display:block;border:1px solid var(--bd)}
+.lgi,.lg img.lgi,img#lgi{width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;border-radius:8px!important;object-fit:contain!important;background:#fff!important;padding:2px!important;flex-shrink:0!important;display:block!important;border:1px solid var(--bd)!important}
 .lg{width:auto!important;max-width:min(520px,62vw)!important}
 .hl-card{box-shadow:0 4px 14px rgba(43,87,151,.18);border:1.5px solid var(--pr)!important;transition:.2s}
 .hl-card:hover{box-shadow:0 6px 20px rgba(43,87,151,.28);transform:translateY(-2px)}
@@ -44,7 +44,7 @@ button.s{background:var(--pr2);color:var(--pr)}input,select{padding:8px;border:1
 body{font-family:'Open Sans','Segoe UI',system-ui,sans-serif;font-size:14px;background:var(--bg);color:var(--tx)}
 .hd{position:fixed;top:0;left:0;right:0;height:calc(60px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 16px 0 0;background:var(--card);box-shadow:var(--sh);display:flex;align-items:center;z-index:20}
 .lg{width:240px;display:flex;align-items:center;gap:10px;padding:0 20px;font-weight:700;color:var(--hd);font-size:16px}
-.lgi{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#3f6ad8,#16aaff);color:#fff;display:grid;place-items:center}
+/* .lgi old rule removed - using img logo */
 .hb{background:transparent!important;color:var(--tx)!important;box-shadow:none!important;padding:6px!important;display:none}
 .us{margin-left:auto;display:flex;align-items:center;gap:12px}
 .av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#3ac47d,#16aaff);color:#fff;display:grid;place-items:center;font-weight:700;cursor:pointer}
@@ -90,7 +90,7 @@ table.tb{width:100%;border-collapse:collapse}table.tb td,table.tb th{padding:10p
 .bar{height:10px;border-radius:6px;background:var(--bd);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#3ac47d,#16aaff)}.big{font-size:44px;font-weight:700;color:var(--hd)}
 .bc{margin-bottom:12px}.bc a{color:var(--pr);cursor:pointer;font-size:13px;font-weight:600}
 .tabs button{border-radius:20px}
-</style><div class='hd'><div class='lg'><img src='logo.png' alt='Logo BV' class='lgi' id='lgi' onerror="this.style.display='none'"><div style='display:flex;flex-direction:column;line-height:1.25;justify-content:center'><b style='font-size:13px;font-weight:700;color:var(--hd)'>Bệnh viện Y học cổ truyền Thành phố Hồ Chí Minh</b><span style='font-size:13px;font-weight:700;color:var(--hd)'>Khoa Vật lý trị liệu - Phục hồi chức năng</span></div></div><button class='hb' onclick=tg() id='hb'></button><div class='us'><div class='ush' style='text-align:right;line-height:1.3'><b style='color:var(--hd)'>Quản trị viên</b><br><span class='mut'>BS.CKI Trần Cồng Hùng</span></div><div class='av' onclick=admin()>QT</div></div></div><div class='sb' id='sb'></div><div class='mn'><div class='pt'><div class='pti' id='pti'></div><div><div class='ptt' id='ptt'></div><div class='pts' id='pts'></div></div></div><div id='app'></div></div>
+</style><div class='hd'><div class='lg'><img src='https://bacsihung.github.io/DaotaokhoaVLTL/logo.png' alt='Logo BV' class='lgi' id='lgi' width='40' height='40' style='width:40px;height:40px;object-fit:contain;display:block;flex-shrink:0;background:#fff;border-radius:8px;border:1px solid #b9cbe6;padding:2px'><div style='display:flex;flex-direction:column;line-height:1.25;justify-content:center'><b style='font-size:13px;font-weight:700;color:var(--hd)'>Bệnh viện Y học cổ truyền Thành phố Hồ Chí Minh</b><span style='font-size:13px;font-weight:700;color:var(--hd)'>Khoa Vật lý trị liệu - Phục hồi chức năng</span></div></div><button class='hb' onclick=tg() id='hb'></button><div class='us'><div class='ush' style='text-align:right;line-height:1.3'><b style='color:var(--hd)'>Quản trị viên</b><br><span class='mut'>BS.CKI Trần Cồng Hùng</span></div><div class='av' onclick=admin()>QT</div></div></div><div class='sb' id='sb'></div><div class='mn'><div class='pt'><div class='pti' id='pti'></div><div><div class='ptt' id='ptt'></div><div class='pts' id='pts'></div></div></div><div id='app'></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ====== DỮ LIỆU MẪU – thay bằng dữ liệu thật (hoặc nhập Excel ở mục Quản trị) ======
@@ -922,8 +922,9 @@ function dlPin(ix){const p=prompt('Mật khẩu quản trị');if(!p)return;if(!
 function admin2(){
   const rows=[0,1,2].map(i=>LB[i].map((l,li)=>{const o=open[SUBJ[i]+'|'+l]||{on:false,set:1};return `<tr><td>${SUBJ[i]}</td><td>${l}</td><td><label class='sw'><input type=checkbox ${o.on?'checked':''} onchange=setO(${i},${li},this.checked,null)><i></i></label></td><td><select onchange=setO(${i},${li},null,+this.value)>${Array.from({length:NSET[i]},(_,k)=>`<option ${o.set==k+1?'selected':''}>${k+1}</option>`).join('')}</select></td></tr>`}).join('')).join('');
   const rr=results.map((r,i)=>[r,i]).slice(-20).reverse();
-  const wheelRows=[0,1,2].map(i=>`<tr><td>${SUBJ[i]}</td><td>Quay ${(typeof WHEEL_N!=='undefined'?WHEEL_N[i]:3)||3} bảng kiểm</td><td><label class='sw'><input type=checkbox ${typeof wheelEnabled==='function'&&wheelEnabled(i)?'checked':''} onchange="typeof setWheel==='function'&&setWheel(${i},this.checked)"><i></i></label></td></tr>`).join('');
-  const ssLink=window.SS_URL?`<a href="${window.SS_URL}" target="_blank" rel="noopener" style="color:var(--pr);font-weight:600">📊 Mở Google Sheet DS học viên</a>`:'<span class="mut">Link Sheet sẽ hiện sau khi deploy Code.gs mới và tải lại trang</span>';
+  const wheelRows=[0,1,2].map(i=>{const pick=(typeof WHEEL_N!=='undefined'?WHEEL_N[i]:3)||3;const pool=[8,39,8][i]||'?';return `<tr><td>${SUBJ[i]}</td><td>Quay ${pick} / bộ ~${pool} bảng kiểm QTKT</td><td><label class='sw'><input type=checkbox ${typeof wheelEnabled==='function'&&wheelEnabled(i)?'checked':''} onchange="typeof setWheel==='function'&&setWheel(${i},this.checked)"><i></i></label></td></tr>`}).join('');
+  const SHEET_HV='https://docs.google.com/spreadsheets/d/10BKtykiTg_3df4r4rL-Lg9bLwz5r3Tka/edit?gid=565591906#gid=565591906';
+  const ssLink=`<a href="${SHEET_HV}" target="_blank" rel="noopener" style="color:var(--pr);font-weight:600">📊 Mở Google Sheet DS học viên</a>`;
   A.innerHTML=back()+`
   ${typeof aiExamHTML==='function'?aiExamHTML():''}
   <div class='p'><div class='ch2'>Vòng quay bảng kiểm QTKT – bật / tắt</div>
@@ -935,7 +936,7 @@ function admin2(){
     <p class='mut'>Cách tính điểm: đúng 65% số câu → 5 điểm; phần còn lại chia đều đến 10.</p>
   </div>
   <div class='p'><div class='ch2'>Danh sách học viên (Google Sheet)</div>
-    <p class='mut'>Danh sách lưu trên Google Sheet. Nhấn để mở xem / chỉnh trên Drive.</p>
+    <p class='mut'>Nhấn link bên dưới để mở file Google Sheet danh sách học viên trên Drive.</p>
     <div style="margin:8px 0">${ssLink}</div>
     <details style="margin-top:8px"><summary class="mut" style="cursor:pointer">Nhập thêm từ Excel (tùy chọn)</summary>
       <p class="mut">Cột: Họ tên | Ngày sinh | Từ ngày | Đến ngày | Phòng | Đối tượng</p>
@@ -1118,22 +1119,39 @@ const WHEEL_COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c',
 function wheelEnabled(si){return !!(open['wheel|'+SUBJ[si]]&&open['wheel|'+SUBJ[si]].on)}
 function setWheel(si,on){open['wheel|'+SUBJ[si]]={on:!!on};SV('open',open);if(OK&&ADM)api({action:'setConfig'},{pin:ADM,open:open}).catch(()=>{});toast(on?'Đã bật vòng quay cho '+SUBJ[si]:'Đã tắt vòng quay')}
 function wheelBkList(si){
+  // Chỉ lấy từ Bảng kiểm quy trình kỹ thuật trên Drive (không lấy danh mục kỹ thuật)
   const L=[],seen={};
-  (TECH[si]||[]).forEach((t,i)=>{
-    const num=String(typeof tnu==='function'?tnu(t):(i+1));
-    const name=typeof tnm==='function'?tnm(t):(Array.isArray(t)?String(t[0]):String(t));
-    const f=typeof bkFile==='function'?bkFile(si,num):null;
-    const key=num+'|'+name;
-    if(!seen[key]){seen[key]=1;L.push({k:num,name,id:f?f.id:null,num})}
-  });
+  const add=(num,name,id)=>{
+    const key=(id||'')+'|'+(num||'')+'|'+name;
+    if(seen[key])return;seen[key]=1;
+    L.push({k:String(num||name),name:String(name),id:id||null,num:num?String(num):''});
+  };
+  // Ưu tiên file trong thư mục đối tượng có chữ "bang kiem"
   if(typeof subjFiles==='function'){
     subjFiles(si,'bang kiem',false).forEach(f=>{
-      if(L.some(x=>x.id===f.id))return;
-      const name=f.name.replace(/\.pdf$/i,'');
-      const m=name.match(/(\d+)/);
-      L.push({k:m?m[1]:name,name,id:f.id,num:m?m[1]:''});
+      const name=f.name.replace(/\.pdf$/i,'').replace(/\.docx?$/i,'');
+      const m=name.match(/(?:^|\s|_|-)(\d{1,3})(?:\s|\.|_|-|$)/) || name.match(/(\d{1,3})/);
+      add(m?m[1]:'', name, f.id);
     });
   }
+  // Bổ sung qua bkFile theo số thứ tự (1..60) nếu có
+  if(typeof bkFile==='function'){
+    for(let n=1;n<=60;n++){
+      const f=bkFile(si,n);
+      if(f){
+        const name=f.name.replace(/\.pdf$/i,'').replace(/\.docx?$/i,'');
+        add(String(n), name, f.id);
+      }
+    }
+  }
+  // Sắp theo số nếu có
+  L.sort((a,b)=>{
+    const na=parseInt(a.num,10), nb=parseInt(b.num,10);
+    if(!isNaN(na)&&!isNaN(nb))return na-nb;
+    if(!isNaN(na))return -1;
+    if(!isNaN(nb))return 1;
+    return a.name.localeCompare(b.name,'vi');
+  });
   return L;
 }
 function getWheelLog(){return LS('wheel_log',[])}
