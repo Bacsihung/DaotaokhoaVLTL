@@ -1051,22 +1051,54 @@ function rooms(){
   const Tb=weekLabels(),R=(id,n)=>roomCard(id,n);
   const adminTop = ADM ? (
     (typeof aiRoomHTML==='function'?aiRoomHTML():'') +
-    `<div class='p'><div class='ch2'>Công cụ phân phòng (quản trị)</div>
-      <p class='mut'>Kéo-thả tên học viên · Bấm tên để sửa ghi chú / dấu * / đổi phòng · Sửa Lưu ý bên dưới.</p>
-      <div style='display:flex;gap:8px;flex-wrap:wrap;margin-top:6px'>
-        <button class='s' onclick=editNote()>✎ Sửa dòng Lưu ý</button>
-        <button class='s' onclick=rooms()>⟳ Làm mới</button>
-      </div>
-    </div>` +
     (typeof expiredCard==='function'?expiredCard():'') +
     (typeof poolCard==='function'?poolCard():'')
   ) : '';
   A.innerHTML=back()+adminTop+`<div class='p'><div class='tabs' style='margin:0 0 6px'>${TK.map((k,x)=>`<button class='${k==TAB?'on':'s'}' onclick=setTab(${x})>${Tb[k]}</button>`).join('')}</div><div class='mut'>${ADM?'Quản trị: nhấn giữ tên rồi kéo vào phòng; bấm tên để sửa ghi chú, dấu *, đổi phòng.':'Danh sách học viên theo phòng.'}</div></div><div class='p'><div class='ch2'>Khu N4</div><div class='n4'><div class='stk'>${R('201-202','P.201 - 202')}${R('208-209','P.208 - 209')}</div><div class='hw'>HÀNH LANG</div><div class='stk'>${R('204-206','P.204 - 206')}${R('207A','P.207A')}${R('207B','P.207B')}</div></div></div><div class='p'><div class='ch2'>Khu N6</div><div class='cols'>${R('6.216','P.6.216')}${R('6.215','P.6.215')}${R('6.214','P.6.214')}${R('6.213','P.6.213')}</div></div><div class='al' id='noteBox'>${(META._note||'Lưu ý: Các bạn có dấu <b style="color:#d92550">*</b> đúng 07h phải có mặt tại phòng được phân công. Lúc 11h đến 11h30 ở phòng 207A.')}</div>${ADM?`<div style='margin-top:8px'><button class='s' onclick=editNote()>✎ Sửa dòng Lưu ý</button></div>`:''}`;
   if(typeof startRoomsPoll==='function')startRoomsPoll();
 }
-function saveRooms(day){if(!OK||!ADM)return;api({action:'saveRooms2'},{pin:ADM,day,rooms:RM[day]||{}}).then(r=>{if(!r.ok)toast('Chưa lưu được: '+(r.error||'lỗi'),1)}).catch(e=>toast('Chưa lưu được: '+e.message,1))}
+let _roomsSavePending=0,_roomsLocalUntil=0;
+function touchRoomsLocal(){_roomsLocalUntil=Date.now()+20000}
+function saveRooms(day){
+  if(!OK||!ADM)return;
+  touchRoomsLocal();
+  _roomsSavePending++;
+  const payload=JSON.parse(JSON.stringify(RM[day]||{}));
+  api({action:'saveRooms2'},{pin:ADM,day:day,rooms:payload}).then(r=>{
+    _roomsSavePending=Math.max(0,_roomsSavePending-1);
+    touchRoomsLocal();
+    if(!r.ok)toast('Chưa lưu được: '+(r.error||'lỗi'),1);
+  }).catch(e=>{
+    _roomsSavePending=Math.max(0,_roomsSavePending-1);
+    toast('Chưa lưu được: '+e.message,1);
+  });
+}
 function saveMeta(){if(!OK||!ADM)return;api({action:'saveMeta'},{pin:ADM,meta:META,removed:REMOVED,extra:EXTRA}).then(r=>{if(!r.ok)toast('Chưa lưu được: '+(r.error||'lỗi'),1)}).catch(e=>toast('Chưa lưu được: '+e.message,1))}
-function dropTo(d,to){const day=TAB;RM[day]=RM[day]||{};const src=d.from?RM[day][d.from]:null;if(to==='pool'){if(src)src.splice(d.idx,1)}else{if(d.from===to)return;let p={k:d.k,note:''};if(src)p=src.splice(d.idx,1)[0]||p;const dst=RM[day][to]=RM[day][to]||[];if(!dst.some(y=>y.k===p.k&&y.note===p.note))dst.push(p)}saveRooms(day);rooms()}
+function dropTo(d,to){
+  const day=TAB;
+  RM[day]=RM[day]||{};
+  touchRoomsLocal();
+  const src=d.from?RM[day][d.from]:null;
+  if(to==='pool'){
+    if(src&&d.idx>=0&&d.idx<src.length)src.splice(d.idx,1);
+  }else{
+    if(d.from===to)return;
+    let p={k:d.k,note:''};
+    if(src&&d.idx>=0&&d.idx<src.length){
+      p=src.splice(d.idx,1)[0]||p;
+    }else if(src){
+      // fallback: tìm theo key nếu idx lệch sau re-render
+      const i=src.findIndex(x=>x.k===d.k);
+      if(i>=0)p=src.splice(i,1)[0]||p;
+    }
+    const dst=RM[day][to]=RM[day][to]||[];
+    if(!dst.some(y=>y.k===p.k&&y.note===(p.note||'')))dst.push(p);
+  }
+  saveRooms(day);
+  const y=window.scrollY;
+  rooms();
+  requestAnimationFrame(()=>window.scrollTo(0,y));
+}
 function startDrag(x,y){if(!DRAG||DRAG.on)return;DRAG.on=true;const g=DRAG.c.cloneNode(true);g.style.cssText='position:fixed;left:0;top:0;pointer-events:none;z-index:99;opacity:.9;box-shadow:0 4px 14px rgba(0,0,0,.25);transform:translate('+(x+8)+'px,'+(y+8)+'px)';document.body.appendChild(g);DRAG.g=g;document.body.classList.add('dragging')}
 function endDrag(){if(DRAG){clearTimeout(DRAG.timer);if(DRAG.g)DRAG.g.remove()}DRAG=null;document.body.classList.remove('dragging');document.querySelectorAll('.dz').forEach(z=>z.classList.remove('dz'))}
 document.addEventListener('pointerdown',e=>{if(!ADM)return;const c=e.target.closest&&e.target.closest('.chp[data-k]');if(!c)return;DRAG={c,k:c.dataset.k,from:c.dataset.room||'',idx:+c.dataset.idx,x:e.clientX,y:e.clientY,on:false,t:e.pointerType};if(e.pointerType==='touch')DRAG.timer=setTimeout(()=>startDrag(DRAG.x,DRAG.y),250)});
@@ -1104,14 +1136,25 @@ function stuMove(){const to=(document.getElementById('sm')||{}).value;if(!to)ret
 let _roomsTimer=null;
 function startRoomsPoll(){clearInterval(_roomsTimer);_roomsTimer=setInterval(async()=>{
   if(!OK)return;
+  // Đang kéo/lưu local thì không ghi đè từ server
+  if(_roomsSavePending>0||Date.now()<_roomsLocalUntil)return;
   try{
     const v=JSON.parse(localStorage.getItem('vltl_view')||'null');
     if(!v||v.k!=='rooms'){clearInterval(_roomsTimer);return}
     const cfg=await api({action:'config'});
-    if(cfg.rooms2){const prev=JSON.stringify(RM);RM=Object.assign({w:{},t7:{},cn:{}},cfg.rooms2);if(JSON.stringify(RM)!==prev){const y=window.scrollY;rooms();requestAnimationFrame(()=>window.scrollTo(0,y))}}
     if(cfg.ssUrl)window.SS_URL=cfg.ssUrl;
+    if(cfg.rooms2){
+      const prev=JSON.stringify(RM);
+      // merge theo từng ngày, không xóa ngày local còn server thiếu
+      const next={w:RM.w||{},t7:RM.t7||{},cn:RM.cn||{}};
+      ['w','t7','cn'].forEach(d=>{if(cfg.rooms2[d])next[d]=cfg.rooms2[d]});
+      if(JSON.stringify(next)!==prev){
+        RM=next;
+        const y=window.scrollY;rooms();requestAnimationFrame(()=>window.scrollTo(0,y));
+      }
+    }
   }catch(e){}
-},20000)}
+},30000)}
 
 // ===== Vòng quay QTKT (Wheel of Names) =====
 const WHEEL_N={0:3,1:8,2:3};
@@ -1343,7 +1386,7 @@ boot=async function(){
   try{
     const cfg=await api({action:'config'});
     if(cfg&&cfg.ssUrl)window.SS_URL=cfg.ssUrl;
-    if(cfg&&cfg.rooms2)RM=Object.assign({w:{},t7:{},cn:{}},cfg.rooms2);
+    if(cfg&&cfg.rooms2&&!(_roomsSavePending>0||Date.now()<_roomsLocalUntil)){const next={w:RM.w||{},t7:RM.t7||{},cn:RM.cn||{}};['w','t7','cn'].forEach(d=>{if(cfg.rooms2[d])next[d]=cfg.rooms2[d]});RM=next;}
     if(cfg&&cfg.open)open=Object.assign(open,cfg.open);
   }catch(e){}
   try{
