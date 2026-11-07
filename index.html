@@ -917,6 +917,18 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 function submit(){clearInterval(S.tm);const tot=S.qs.length,ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length,sc=score(ok,tot);results.push({n:S.st.n,d:S.st.d,t:S.t,ph:S.l,set:S.set,from:S.st.from||'',to:S.st.to||'',ok,tot,sc,at:new Date().toLocaleString('vi-VN'),qs:S.qs.map(q=>({q:q.q,o:q.o,a:q.a})),ans:S.ans});SV('res',results);const ix=results.length-1;A.innerHTML=`<div class='p' style='max-width:520px;margin:0 auto;text-align:center'><div class='ch2' style='justify-content:center'>Kết quả bài thi</div><div class='big'>${sc}<span style='font-size:18px'>/10</span></div><p>Số câu đúng: <b>${ok}/${tot}</b></p><div class='bar'><i style='width:${ok/tot*100}%'></i></div><div style='margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap'><button onclick=home()>Về trang chủ</button><button class='s' onclick=dlPin(${ix})>Tải đề thi của thí sinh (Quản trị viên)</button></div></div>`}
 function paperHTML(r){return `<html><head><meta charset='utf-8'><title>Đề thi</title><style>body{font-family:'Times New Roman';font-size:12pt}.q{margin:8pt 0}.ok{color:#0a7d3a;font-weight:bold}.bad{color:#c00000}</style></head><body><h2 style='text-align:center'>ĐỀ THI KẾT THÚC THỰC HÀNH – KHOA VLTL – PHCN</h2><p>Họ tên: <b>${esc(r.n)}</b> – Ngày sinh: ${esc(r.d)}<br>Đối tượng: ${esc(r.t)}${r.ph&&r.t=='Cử nhân PHCN'?' – '+esc(r.ph):''} – Bộ đề số ${r.set}<br>Thời điểm nộp: ${esc(r.at)}<br>Kết quả: ${r.ok}/${r.tot} câu đúng – Điểm: <b>${r.sc}</b>/10</p><hr>${r.qs.map((q,k)=>`<div class='q'><b>Câu ${k+1}.</b> ${esc(q.q)}${q.o.map((t,m)=>`<div class='${m==q.a?'ok':(r.ans[k]==m?'bad':'')}'>${'ABCD'[m]}. ${esc(t)}${m==q.a?' ✔':''}${r.ans[k]==m?' ◄ thí sinh chọn':''}</div>`).join('')}</div>`).join('')}</body></html>`}
 async function saveF(name,data){try{const dl=await claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:name,data})}catch(e){}}
+function delResult(ix){
+  const r=results[ix];
+  if(!r)return;
+  const msg='XÓA kết quả thi của:\n\n• '+r.n+' ('+(r.t||'')+')\n• Điểm: '+(r.sc!=null?r.sc:'—')+(r.tot?' ('+r.ok+'/'+r.tot+')':'')+'\n\nLưu ý: Bảng điểm / file đã lưu trên Drive KHÔNG bị xóa.\nChỉ xóa dòng trên web.\n\nBạn chắc chắn muốn xóa?';
+  if(!confirm(msg))return;
+  if(!confirm('Xác nhận lần 2: Xóa vĩnh viễn kết quả này trên web?'))return;
+  results.splice(ix,1);
+  SV('res',results);
+  toast('Đã xóa kết quả của '+r.n);
+  if(typeof admin2==='function')admin2();
+  else if(typeof admin==='function')admin();
+}
 function dlr(ix){const r=results[ix];if(!r||!r.qs)return alert('Không có dữ liệu đề thi');const sl=r.n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\W+/g,'_');saveF('de_thi_'+sl+'_de'+r.set+'.doc',new TextEncoder().encode(paperHTML(r)))}
 function dlPin(ix){const p=prompt('Mật khẩu quản trị');if(!p)return;if(!OK)return alert('Chưa cấu hình kết nối Google Drive');api({action:'auth'},{pin:p}).then(r=>{if(r.ok)dlr(ix);else alert('Sai mật khẩu')}).catch(()=>alert('Không kết nối được máy chủ'))}
 function admin2(){
@@ -944,7 +956,7 @@ function admin2(){
     </details>
   </div>
   <div class='p'><div class='ch2'>Kết quả thi<span class='pill'>${results.length}</span></div>
-    ${rr.length?`<div class='ov'><table class='tb'><tr><th>Họ tên</th><th>Mục</th><th>Đề</th><th>Điểm</th><th></th></tr>${rr.map(([r,i])=>`<tr><td>${r.n}</td><td>${r.t}${r.ph&&r.t=='Cử nhân PHCN'?' · '+r.ph:''}</td><td>${r.set||'—'}</td><td><b>${r.sc!=null?r.sc:'—'}</b>${r.tot?` (${r.ok}/${r.tot})`:''}</td><td>${r.qs?`<button class='s' onclick=dlr(${i})>Tải đề</button>`:''}</td></tr>`).join('')}</table></div>`:'<p class=mut>Chưa có bài thi nào.</p>'}
+    ${rr.length?`<div class='ov'><table class='tb'><tr><th>Họ tên</th><th>Mục</th><th>Đề</th><th>Điểm</th><th></th></tr>${rr.map(([r,i])=>`<tr><td>${r.n}</td><td>${r.t}${r.ph&&r.t=='Cử nhân PHCN'?' · '+r.ph:''}</td><td>${r.set||'—'}</td><td><b>${r.sc!=null?r.sc:'—'}</b>${r.tot?` (${r.ok}/${r.tot})`:''}</td><td style='white-space:nowrap'>${r.qs?`<button class='s' onclick=dlr(${i})>Tải đề</button> `:''}<button class='s' style='color:var(--no)' onclick=delResult(${i})>Xóa</button></td></tr>`).join('')}</table></div>`:'<p class=mut>Chưa có bài thi nào.</p>'}
     <div style='margin-top:12px;display:flex;gap:8px;flex-wrap:wrap'>
       <button onclick="expEnd('Bác sĩ')">Xuất kết quả Bác sĩ</button>
       <button onclick="expEnd('Cử nhân PHCN')">Xuất kết quả Cử nhân</button>
@@ -1038,16 +1050,47 @@ document.head.insertAdjacentHTML('beforeend',`<style>.chp{display:inline-flex;al
 let STU_RAW=students.slice(),RM={w:{},t7:{},cn:{}},META={},REMOVED=[],EXTRA=[],NAMES={},SP=null,DRAG=null,SUPPRESS=0;
 const skey=x=>x.n+'|'+(x.d||''),escA=x=>esc(x).replace(/"/g,'&quot;');
 function rebuildNames(){NAMES={};const tk=students.map(x=>fold(x.n).toLowerCase().split(/\s+/).filter(Boolean));students.forEach((x,i)=>{const orig=x.n.trim().split(/\s+/);let k=1;for(;k<tk[i].length;k++){const lab=tk[i].slice(-k).join(' ');if(!tk.some((o,j)=>j!==i&&o.slice(-k).join(' ')===lab))break}NAMES[skey(x)]=orig.slice(-k).join(' ')})}
-function rebuildStudents(){students=STU_RAW.concat(EXTRA).filter(x=>REMOVED.indexOf(skey(x))<0);rebuildNames()}
+function rebuildStudents(){
+  students=STU_RAW.concat(EXTRA).filter(x=>REMOVED.indexOf(skey(x))<0);
+  rebuildNames();
+  try{localStorage.setItem('vltl_stu_cache',JSON.stringify({t:Date.now(),stu:STU_RAW,extra:EXTRA,removed:REMOVED,meta:META}))}catch(e){}
+}
+function hydrateStudentsFromCache(){
+  try{
+    const o=JSON.parse(localStorage.getItem('vltl_stu_cache')||'null');
+    if(!o||!o.stu||!o.stu.length)return false;
+    STU_RAW=o.stu;
+    if(Array.isArray(o.extra))EXTRA=o.extra;
+    if(Array.isArray(o.removed))REMOVED=o.removed;
+    if(o.meta&&typeof o.meta==='object')META=o.meta;
+    students=STU_RAW.concat(EXTRA).filter(x=>REMOVED.indexOf(skey(x))<0);
+    rebuildNames();
+    return true;
+  }catch(e){return false}
+}
 const _ls=loadStudents;loadStudents=async function(){await _ls();if(STU_SRC)STU_RAW=students.slice();rebuildStudents()};
-async function pullCfg(){if(!OK)return;try{const c=await api({action:'config'});if(c.error)throw new Error(c.error);open=c.open||{};if(c.students&&c.students.length&&!STU_SRC)STU_RAW=c.students;const m=c.meta||{};META=m.meta||{};REMOVED=m.removed||[];EXTRA=m.extra||[];if(c.rooms2)mergeRoomsFromServer(c.rooms2);else loadPersistedRM();rebuildStudents();SV('open',open);CFG_ERR=''}catch(e){CFG_ERR=String(e.message||e)}}
+async function pullCfg(){if(!OK)return;try{
+  const c=await api({action:'config'});
+  if(c.error)throw new Error(c.error);
+  open=c.open||{};
+  if(c.ssUrl)window.SS_URL=c.ssUrl;
+  if(c.students&&c.students.length&&!STU_SRC)STU_RAW=c.students;
+  const m=c.meta||{};META=m.meta||{};REMOVED=m.removed||[];EXTRA=m.extra||[];
+  if(c.rooms2)mergeRoomsFromServer(c.rooms2);else if(typeof loadPersistedRM==='function')loadPersistedRM();
+  rebuildStudents();
+  SV('open',open);CFG_ERR='';
+  try{
+    const v=JSON.parse(localStorage.getItem('vltl_view')||'null');
+    if(v&&v.k==='rooms'&&typeof rooms==='function'){const y=window.scrollY;rooms();requestAnimationFrame(()=>window.scrollTo(0,y))}
+  }catch(e){}
+}catch(e){CFG_ERR=String(e.message||e)}}
 const studentByKey=k=>students.find(x=>skey(x)===k)||null;
 const abbr=x=>{const t=fold(x.t||'').toLowerCase();return /bac si|^bs/.test(t)?'BS':/(^| )y si|^ys/.test(t)?'YS':'KTV'};
 function parseDMY(v){const m=String(v||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?new Date(+m[3],+m[2]-1,+m[1]):null}
 function expired(x){const d=parseDMY(x.to);if(!d)return false;const t=new Date();t.setHours(0,0,0,0);return d<t}
 const placed=(x,day)=>Object.values(RM[day||TAB]||{}).some(L=>L.some(p=>p.k===skey(x)));
 function weekLabels(){const d=new Date(),wd=(d.getDay()+6)%7,mon=new Date(d.getFullYear(),d.getMonth(),d.getDate()-wd),add=n=>new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+n),f=x=>String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0');return{w:'Trong tuần ('+f(mon)+' – '+f(add(4))+')',t7:'Thứ Bảy '+f(add(5)),cn:'Chủ Nhật '+f(add(6))}}
-function chipP(p,room,i){const x=studentByKey(p.k),mt=META[p.k]||{},lab=x?abbr(x)+' '+(NAMES[p.k]||x.n):p.k.split('|')[0]+' (không còn trong DS)';return `<span class='chp ${x?abbr(x).toLowerCase():''} ${ADM?'adm':''}' data-k="${escA(p.k)}" data-room="${room}" data-idx="${i}">${esc(lab)}${mt.star?'<span class=st>*</span>':''}${p.note?` <span class=nt>${esc(p.note)}</span>`:''}${ADM&&x&&expired(x)?' <span class=st title="Hết thời gian thực tập">⚠</span>':''}</span>`}
+function chipP(p,room,i){const x=studentByKey(p.k),mt=META[p.k]||{},lab=x?abbr(x)+' '+(NAMES[p.k]||x.n):p.k.split('|')[0];return `<span class='chp ${x?abbr(x).toLowerCase():''} ${ADM?'adm':''}' data-k="${escA(p.k)}" data-room="${room}" data-idx="${i}">${esc(lab)}${mt.star?'<span class=st>*</span>':''}${p.note?` <span class=nt>${esc(p.note)}</span>`:''}${ADM&&x&&expired(x)?' <span class=st title="Hết thời gian thực tập">⚠</span>':''}</span>`}
 function chipPool(x){const k=skey(x),mt=META[k]||{};return `<span class='chp ${abbr(x).toLowerCase()} ${ADM?'adm':''}' data-k="${escA(k)}" data-room="">${esc(abbr(x)+' '+(NAMES[k]||x.n))}${mt.star?'<span class=st>*</span>':''}${ADM&&expired(x)?' <span class=st title="Hết thời gian thực tập">⚠</span>':''}</span>`}
 function roomCard(id,name){const L=(RM[TAB]||{})[id]||[];return `<div class='rm' data-drop="${id}"><h3>${name}<span>${L.length} học viên</span></h3>${L.length?L.map((p,i)=>chipP(p,id,i)).join(''):`<span class='mut'>${ADM?'Kéo học viên vào đây':'Chưa có học viên'}</span>`}</div>`}
 function poolCard(){const un=students.filter(x=>!placed(x)),g={BS:[],KTV:[],YS:[]};un.forEach(x=>g[abbr(x)].push(x));const col=(a,t)=>`<div class='pc'><b>${t}</b> <span class='pill'>${g[a].length}</span><div style='margin-top:6px'>${g[a].map(chipPool).join('')||'<span class=mut>—</span>'}</div></div>`;const rem=REMOVED.map(k=>{const x=STU_RAW.find(y=>skey(y)===k);return x?`<div class='tr' style='cursor:default'><span class='tn'>${esc(x.n)}</span><button class='s' onclick=restoreStu(this.dataset.k) data-k="${escA(k)}">Khôi phục</button></div>`:''}).join('');return `<div class='p' data-drop="pool"><div class='ch2'>Học viên chưa phân phòng<span class='pill'>${un.length}</span></div><div class='pool3'>${col('BS','Bác sĩ')}${col('KTV','KTY PHCN')}${col('YS','Y sĩ')}</div><div style='display:flex;gap:6px;margin-top:10px;flex-wrap:wrap'><input id=xn class='fi' placeholder='Gõ thêm tên học viên…' style='flex:1;min-width:180px;margin:0'><select id=xt class='fi' style='width:auto;margin:0'><option value=BS>BS</option><option value=KTV>KTV</option><option value=YS>YS</option></select><button onclick=addExtra()>Thêm</button></div>${rem?`<details style='margin-top:10px'><summary class='mut' style='cursor:pointer'>Học viên đã xóa (${REMOVED.length}) – khôi phục</summary>${rem}</details>`:''}</div>`}
@@ -1552,62 +1595,35 @@ admin=function(){
   }).catch(()=>alert('Không kết nối được máy chủ Drive'));
 };
 
-// Patch boot to store SS_URL and re-render
+// Patch boot: không gọi config lần 2 (pullCfg đã tải). Chỉ hydrate cache + refresh view.
 const _boot=boot;
 boot=async function(){
   try{await _boot.apply(this,arguments)}catch(e){}
   try{
-    const cfg=await api({action:'config'});
-    if(cfg&&cfg.ssUrl)window.SS_URL=cfg.ssUrl;
-    if(cfg&&cfg.rooms2)mergeRoomsFromServer(cfg.rooms2);else loadPersistedRM();
-    if(cfg&&cfg.open)open=Object.assign(open,cfg.open);
-  }catch(e){}
-  try{
     const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');
-    if(v&&v.k==='rooms')rooms();
-    else if(v&&v.k&&v.k.startsWith('s'))subj(+v.k.slice(1));
+    if(v&&v.k==='rooms'&&typeof rooms==='function'){const y=window.scrollY;rooms();requestAnimationFrame(()=>window.scrollTo(0,y))}
+    else if(v&&v.k&&v.k.startsWith('s')&&typeof subj==='function')subj(+v.k.slice(1));
   }catch(e){}
 };
 
-// Keep scroll on drop
-if(typeof dropTo==='function'){
-  const _dropTo=dropTo;
-  dropTo=function(d,to){const y=window.scrollY;_dropTo(d,to);requestAnimationFrame(()=>window.scrollTo(0,y))};
-}
-
-// Inject Đổi phòng into openStu if not present
-if(typeof openStu==='function' && !/stuMove/.test(String(openStu))){
-  const _openStu=openStu;
-  openStu=function(k,room,idx){
-    _openStu(k,room,idx);
-    if(!ADM||!room)return;
-    const box=document.querySelector('.md div');
-    if(!box||box.querySelector('#sm'))return;
-    const others=(typeof RAI!=='undefined'?RAI:[]).filter(([id])=>id!==room);
-    const div=document.createElement('div');
-    div.innerHTML=`<label class='lbl'>Đổi phòng</label><div style='display:flex;gap:6px'><select id=sm class='fi' style='margin:0'><option value=''>— Chọn phòng mới —</option>${others.map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select><button class='s' onclick=stuMove()>Chuyển</button></div>`;
-    const unp=box.querySelector('button[onclick*=stuUnplace]');
-    if(unp)unp.parentNode.insertBefore(div,unp);
-    else box.appendChild(div);
-  };
-}
-
-// Inject wheelHTML into subj pages
+// Inject wheelHTML vào CUỐI trang đối tượng
 const _subj2=subj;
 subj=function(i){
   _subj2(i);
   try{
     if(typeof wheelHTML==='function'){
       const html=wheelHTML(i);
-      const first=A.querySelector('.p, .gw, .cg, h1');
-      if(first)first.insertAdjacentHTML('beforebegin', html);
-      else A.insertAdjacentHTML('beforeend', html);
+      A.insertAdjacentHTML('beforeend', html);
     }
   }catch(e){}
 };
 
 try{loadPersistedRM()}catch(e){}
+try{if(typeof hydrateStudentsFromCache==='function')hydrateStudentsFromCache()}catch(e){}
 restoreView();
+// Ưu tiên tải config ngay (học viên + phòng) — không chờ tree
+if(typeof pullCfg==='function')pullCfg().then(()=>{try{if(typeof rerender==='function')rerender()}catch(e){}}).catch(()=>{});
 boot();
+
 </script></body></html>
 
