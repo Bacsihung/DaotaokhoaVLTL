@@ -38,6 +38,23 @@ button.s{background:var(--pr2);color:var(--pr)}input,select{padding:8px;border:1
 .wheel-wrap{position:relative;width:340px;height:340px;margin:12px auto}
 .wheel-wrap canvas{border-radius:50%;box-shadow:0 6px 24px rgba(0,0,0,.18);background:#fff}
 .wheel-pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid #d92550;z-index:2;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+
+.navrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.navrow .s{margin:0}
+.uimask{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.uibox{background:var(--card,#fff);color:var(--tx);border-radius:12px;box-shadow:0 12px 40px rgba(15,23,42,.2);border:1px solid var(--bd);width:100%;max-width:400px;padding:22px 22px 16px;animation:uipop .15s ease}
+@keyframes uipop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.uibox h3{margin:0 0 8px;font-size:17px;font-weight:700}
+.uibox p{margin:0 0 14px;color:var(--mut);font-size:14px;line-height:1.45}
+.uibox input.uipass{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;font-size:15px;margin:0 0 14px;background:var(--bg,#f8fafc);color:var(--tx);letter-spacing:2px}
+.uibox input.uipass:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 3px var(--pr2)}
+.uibox .uiacts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.uibox .uiacts button{min-width:88px}
+.wg.clk{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.wg.clk:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.wg.clk.on{outline:2px solid #fff;box-shadow:0 0 0 3px rgba(43,87,151,.35)}
+.subj-panel{margin-top:12px}
+
 </style></head><body><link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'><style>
 :root{padding:0;--bg:#f1f4f6;--card:#fff;--tx:#495057;--hd:#343a40;--mut:#6c757d;--pr:#3f6ad8;--pr2:#e0e9fb;--bd:#e3e8ee;--sh:0 .47rem 2.2rem rgba(4,9,20,.03),0 .94rem 1.4rem rgba(4,9,20,.03),0 .25rem .53rem rgba(4,9,20,.05),0 .125rem .19rem rgba(4,9,20,.03)}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#10151f;--card:#1a2130;--tx:#c9d1e0;--hd:#e8edf7;--mut:#8b97ad;--pr:#6c93f5;--pr2:#232f4a;--bd:#2a3347}button{color:#0f1722!important}.s{color:var(--pr)!important}}
@@ -119,7 +136,68 @@ function home(){S={};A.innerHTML=`<h1>Chào mừng học viên đến thực hà
 <div class="c" onclick="rooms()"><h2>🏥 Danh sách phân phòng</h2></div></div>
 <h2>Đối tượng thực hành</h2><div class="g">${SUBJ.map((s,i)=>`<div class="c" onclick="subj(${i})"><h2>${s}</h2></div>`).join("")}</div>
 <p class="mut" style="text-align:center"><a href="#" onclick="admin();return false">Quản trị viên</a></p>`}
-function back(){return `<p><button class="s" onclick="home()">← Trang chủ</button></p>`}
+
+// ===== Điều hướng Quay lại / Trang chủ + dialog ArchitectUI =====
+const NAV_HIST=[];
+function pushNav(k,arg){
+  const last=NAV_HIST[NAV_HIST.length-1];
+  if(last&&last.k===k&&String(last.arg)===String(arg))return;
+  NAV_HIST.push({k:k,arg:arg});
+  if(NAV_HIST.length>40)NAV_HIST.shift();
+}
+function navigateTo(v,fromHist){
+  if(!v||!v.k){home();return}
+  if(v.k==='home')home();
+  else if(v.k==='rules')rules();
+  else if(v.k==='rooms')rooms();
+  else if(v.k==='admin'&&typeof admin2==='function'&&ADM)admin2();
+  else if(v.k&&v.k.startsWith('s')&&v.k.length<=3)subj(+v.k.slice(1));
+  else if(v.k==='rev')rev(v.arg);
+  else if(v.k==='ex1')ex1(v.arg,v.arg2);
+  else home();
+}
+function goBack(){
+  if(NAV_HIST.length>1){
+    NAV_HIST.pop();
+    const p=NAV_HIST[NAV_HIST.length-1];
+    if(p)navigateTo(p,true);else home();
+  }else home();
+}
+function back(){
+  return `<div class="navrow"><button type="button" class="s" onclick="goBack()">← Quay lại</button><button type="button" class="s" onclick="home()">Trang chủ</button></div>`;
+}
+function uiCloseMask(m){try{m.remove()}catch(e){}}
+function uiDialog({title,message,input,okText,cancelText}){
+  return new Promise(resolve=>{
+    const mask=document.createElement('div');
+    mask.className='uimask';
+    mask.innerHTML=`<div class="uibox" role="dialog" aria-modal="true">
+      <h3>${esc(title||'Thông báo')}</h3>
+      ${message?`<p>${esc(message)}</p>`:''}
+      ${input?`<input class="uipass" id="uiIn" type="${input.type||'text'}" placeholder="${esc(input.placeholder||'')}" autocomplete="off" spellcheck="false">`:''}
+      <div class="uiacts">
+        ${cancelText!==false?`<button type="button" class="s" id="uiCancel">${esc(cancelText||'Hủy')}</button>`:''}
+        <button type="button" id="uiOk">${esc(okText||'OK')}</button>
+      </div>
+    </div>`;
+    document.body.appendChild(mask);
+    const inp=mask.querySelector('#uiIn');
+    const ok=mask.querySelector('#uiOk');
+    const cancel=mask.querySelector('#uiCancel');
+    const done=v=>{uiCloseMask(mask);resolve(v)};
+    ok.onclick=()=>done(input?(inp.value||''):true);
+    if(cancel)cancel.onclick=()=>done(input?null:false);
+    mask.addEventListener('click',e=>{if(e.target===mask)done(input?null:false)});
+    if(inp){inp.focus();inp.onkeydown=e=>{if(e.key==='Enter')ok.click();if(e.key==='Escape')done(null)}}
+    else ok.focus();
+  });
+}
+function uiAlert(message,title){return uiDialog({title:title||'Thông báo',message:String(message),cancelText:false,okText:'Đóng'})}
+function uiConfirm(message,title){return uiDialog({title:title||'Xác nhận',message:String(message),okText:'Đồng ý',cancelText:'Hủy'})}
+function uiPromptPass(message,title){
+  return uiDialog({title:title||'Đăng nhập quản trị',message:message||'Nhập mật khẩu quản trị',input:{type:'password',placeholder:'••••••••'},okText:'Đăng nhập',cancelText:'Hủy'});
+}
+
 function rules(){A.innerHTML=back()+`<div class="p"><h2>Nội quy của Khoa</h2><p>[Nội dung nội quy sẽ được bổ sung]</p><p>📎 Đơn xin nghỉ phép: <span class="mut">(chưa gắn file – điền link vào biến LEAVE_URL)</span></p></div>`}
 const STAFF={"201-202":"BS Tuấn,ĐD Điệp,CN Bình,CN Nam,CN Phương,CN Thanh Tú,CN Thiên Phúc,CN Trúc,CN Luân","204-206":"CN Trọng Duy","200":"CN Nam,CN Quyên,CN Thúy","208-209":"BS Thắng,CN Đăng,CN Đức,CN Hiệp,CN Hoàng Thịnh,CN Khang,CN Khoa,CN Mai,CN Thành,CN Thành Nhân,CN Thiện,CN Trọng Nhân,CN Văn,CN Vy","207A":"CN Mười,CN Mỹ Tú,CN Thông,CN Thư","207B":"CN Nghĩa,CN Tuấn Thịnh","6.216":"BS Châu,BS Hùng,BS Huy,CN Hiếu,CN Hương,CN Kha,CN Thanh Duy","6.215":"BS Phúc","6.214":"CN Anh Duy,CN Ngôn,CN Tài","6.213":""};
 const SCH={w:{"201-202":"Ys Lê Thu,YS Hải Yến,KTV Trọng Các,KTV Đình Nhân,KTV Sơn Vũ,KTV Hồng Hạnh,YS Cư bù,KTV Kim Chung,BS Thanh Tú","207A":"BS Kiều Khanh,KTV Văn Quốc,KTV Tấn Ben,KTV Lê Quân,KTV Mỹ Linh,KTV Khả Phương,YS Thúy Oanh,YS Thanh Hà,YS Trung Tín,YS Thanh Hòa,KTV Minh Phương,BS DHYD 4","207B":"BS DHYD 1","208-209":"SV HB 11,YS Lê Hiếu,YS Xuân Nhi,KTV Thị Thương,KTV Thu Trang,KTV Tuyết Nhi,KTV Việt Thắng,YS Công Trương,YS Mỹ Dung,BS Chí Thuận,Thiên Cơ","6.216":"KTV Thu Thảo,KTV Trường Duy,KTV Tuyết Nhi|tối,KTV Thu Trang|tối,KTV Kim Chung|tối","6.215":"BS Khánh Huyền"},
@@ -625,13 +703,27 @@ bong:{t:'Tập vận động trên bóng',q:[
 ['Trẻ có thể ngã khi tập đứng, đi nếu:','Đu đưa, đẩy bóng quá nhanh','Bóng quá cứng','Trẻ nằm yên','Tập ngày 2 lần']]}
 });
 KEYS[1].push('afo','giaothoa','ngoithangbang','ngoidung','dungthangbang','dangdi','khungtapdi','nang','cauthang','diahinh','thudong','keodan','bong');
-function back(){return `<div class='bc'><a onclick=home()>← Trang chủ</a></div>`}
+function back(){return `<div class='navrow'><button type='button' class='s' onclick='goBack()'>← Quay lại</button><button type='button' class='s' onclick='home()'>Trang chủ</button></div>`}
 const tnm=t=>t[0].replace(/^\d+\.\s*/,''),tnu=t=>(t[0].match(/^\d+/)||[''])[0];
 function trow(t){const u=t[1];return `<div class='tr' data-t='${tnm(t).toLowerCase()}' ${u?`onclick="pdf('${u}','${tnm(t).replace(/'/g,'')}')"`:''}><span class='nb'>${tnu(t)}</span><span class='tn'>${tnm(t)}</span><span class='pill ${u?'':'x'}'>${u?'PDF':'Chưa có file'}</span></div>`}
 function flt(v){v=v.toLowerCase();document.querySelectorAll('.tr[data-t]').forEach(r=>r.style.display=r.dataset.t.includes(v)?'':'none')}
-function subj(i){const s=SUBJ[i],T1=TECH[i],nq=KEYS[i].length;
+let SUBJ_PANEL=null; // tech | bk | rev | null
+function openSubjPanel(i,p){SUBJ_PANEL=(SUBJ_PANEL===p)?null:p;subj(i)}
+function subj(i){const s=SUBJ[i],T1=TECH[i],nq=KEYS[i].length;pushNav('s'+i);
 const ex=LB[i].map((l,li)=>{const o=open[s+'|'+l],ok=o&&o.on;return `<div class='c sj ${ok?'g2':'g4'}' style='margin-bottom:10px;opacity:${ok?1:.8}' ${ok?`onclick=ex1(${i},${li})`:''}><h2>${l}</h2><div class='mut'>${ok?'Đã mở – Đề số '+o.set+' – nhấn để vào thi':(CFG_ERR?'Lỗi kết nối máy chủ (bấm F5 để thử lại)':'Chờ Quản trị viên mở')}</div></div>`}).join('')||`<div class='c sj g4' style='opacity:.8'><h2>Thi kết thúc thực hành</h2><div class='mut'>Chưa có bộ đề cho nhóm này</div></div>`;
-A.innerHTML=back()+`<div class='gw'><div class='wg g1'><b>${T1.length}</b><span>Kỹ thuật trong danh mục</span></div><div class='wg g2'><b>${bkCount(i)}</b><span>Bảng kiểm quy trình</span></div><div class='wg g3'><b>${nq*5}</b><span>Câu hỏi ôn tập</span></div></div><div class='cg'><div class='p'><div class='ch2'>Danh mục kỹ thuật PHCN (TT 32/2023/TT-BYT)<span class='pill'>${T1.length}</span></div>${T1.length?`<input class='fi' placeholder='Tìm kỹ thuật…' oninput=flt(this.value)><div class='scr'>${T1.map(trow).join('')}</div>`:'<span class=mut>Chưa có danh mục cho nhóm này.</span>'}</div><div><div class='p'><div class='ch2'>Bảng kiểm quy trình kỹ thuật</div>${bkList(i)}</div><div class='c sj g5' style='margin-bottom:10px;opacity:${nq?1:.8}' ${nq?`onclick=rev(${i})`:''}><h2>Bộ câu hỏi trắc nghiệm ôn tập</h2><div class='mut'>${nq?nq+' kỹ thuật × 5 câu':'Đang cập nhật'}</div></div>${ex}</div></div>`}
+const panelTech=`<div class='p subj-panel'><div class='ch2'>Danh mục kỹ thuật PHCN (TT 32/2023/TT-BYT)<span class='pill'>${T1.length}</span></div>${T1.length?`<input class='fi' placeholder='Tìm kỹ thuật…' oninput=flt(this.value)><div class='scr'>${T1.map(trow).join('')}</div>`:'<span class=mut>Chưa có danh mục cho nhóm này.</span>'}</div>`;
+const panelBk=`<div class='p subj-panel'><div class='ch2'>Bảng kiểm quy trình kỹ thuật</div>${typeof bkList==='function'?bkList(i):'<span class=mut>Đang tải…</span>'}</div>`;
+const panelRev=nq
+  ?`<div class='p subj-panel'><div class='ch2'>Bộ câu hỏi trắc nghiệm ôn tập<span class='pill'>${nq*5}</span></div><p class='mut'>Mỗi kỹ thuật có 5 câu. Bấm để xem toàn bộ câu hỏi ôn tập.</p><button onclick=rev(${i})>Mở bộ câu hỏi ôn tập</button></div>`
+  :`<div class='p subj-panel'><div class='ch2'>Bộ câu hỏi trắc nghiệm ôn tập</div><p class='mut'>Đang cập nhật</p></div>`;
+const openPanel=SUBJ_PANEL==='tech'?panelTech:(SUBJ_PANEL==='bk'?panelBk:(SUBJ_PANEL==='rev'?panelRev:''));
+A.innerHTML=back()+`<div class='gw'>
+  <div class='wg g1 clk ${SUBJ_PANEL==='tech'?'on':''}' onclick=openSubjPanel(${i},'tech')><b>${T1.length}</b><span>Kỹ thuật trong danh mục</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>${SUBJ_PANEL==='tech'?'Đang mở · bấm để đóng':'Bấm để xem danh mục'}</div></div>
+  <div class='wg g2 clk ${SUBJ_PANEL==='bk'?'on':''}' onclick=openSubjPanel(${i},'bk')><b>${typeof bkCount==='function'?bkCount(i):'—'}</b><span>Bảng kiểm quy trình</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>${SUBJ_PANEL==='bk'?'Đang mở · bấm để đóng':'Bấm để xem bảng kiểm'}</div></div>
+  <div class='wg g3 clk ${SUBJ_PANEL==='rev'?'on':''}' onclick=openSubjPanel(${i},'rev')><b>${nq*5}</b><span>Câu hỏi ôn tập</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>${SUBJ_PANEL==='rev'?'Đang mở · bấm để đóng':'Bấm để xem câu hỏi'}</div></div>
+</div>
+${openPanel}
+<div style='margin-top:14px'><div class='zone'>Thi kết thúc thực hành</div>${ex}</div>`}
 function rev(i){A.innerHTML=back()+`<div class='al'>Mỗi kỹ thuật có 5 câu ôn tập. Bấm vào kỹ thuật để xem câu hỏi, bấm “Đáp án” để xem đáp án.${i==1?' (Chưa có câu hỏi cho 5 kỹ thuật: nẹp AFO, Frenkel, bồn bóng nhỏ, chườm ngải cứu và lượng giá chức năng người khuyết tật.)':''}</div>`+KEYS[i].map((k,ti)=>`<details class='ac'><summary><span class='nb'>${ti+1}</span><span class='tn'>${QS[k].t}</span><span class='pill'>5 câu</span></summary><div class='bd'>`+QS[k].q.slice(0,5).map((x,j)=>{const o=opts(x,rng(11*j+ti+3));return `<div class='qq'><b>Câu ${j+1}.</b> ${o.q}${o.o.map((t,m)=>`<div class='op'><span class='ol'>${'ABCD'[m]}</span>${t}</div>`).join('')}<details><summary class='mut' style='cursor:pointer'>Đáp án</summary><b style='color:#3ac47d'>${'ABCD'[o.a]}. ${o.o[o.a]}</b></details></div>`}).join('')+`</div></details>`).join('')}
 function rules(){A.innerHTML=back()+`<div class='al'>Các học viên bắt buộc tuân thủ đúng các nội quy của Khoa.</div><div class='cg'><div class='p'><div class='ch2'>Nội quy của Khoa</div><p class='mut'>[Nội dung nội quy sẽ được bổ sung]</p></div><div class='p'><div class='ch2'>Đơn xin nghỉ phép</div><p class='mut'>Đính kèm đơn xin nghỉ phép của Khoa.</p><button disabled style='opacity:.5'>Tải đơn (chưa có file)</button></div></div>`}
 const TK=['w','t7','cn'];function setTab(k){persistRM();TAB=TK[k];rooms()}
@@ -917,17 +1009,18 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 function submit(){clearInterval(S.tm);const tot=S.qs.length,ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length,sc=score(ok,tot);results.push({n:S.st.n,d:S.st.d,t:S.t,ph:S.l,set:S.set,from:S.st.from||'',to:S.st.to||'',ok,tot,sc,at:new Date().toLocaleString('vi-VN'),qs:S.qs.map(q=>({q:q.q,o:q.o,a:q.a})),ans:S.ans});SV('res',results);const ix=results.length-1;A.innerHTML=`<div class='p' style='max-width:520px;margin:0 auto;text-align:center'><div class='ch2' style='justify-content:center'>Kết quả bài thi</div><div class='big'>${sc}<span style='font-size:18px'>/10</span></div><p>Số câu đúng: <b>${ok}/${tot}</b></p><div class='bar'><i style='width:${ok/tot*100}%'></i></div><div style='margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap'><button onclick=home()>Về trang chủ</button><button class='s' onclick=dlPin(${ix})>Tải đề thi của thí sinh (Quản trị viên)</button></div></div>`}
 function paperHTML(r){return `<html><head><meta charset='utf-8'><title>Đề thi</title><style>body{font-family:'Times New Roman';font-size:12pt}.q{margin:8pt 0}.ok{color:#0a7d3a;font-weight:bold}.bad{color:#c00000}</style></head><body><h2 style='text-align:center'>ĐỀ THI KẾT THÚC THỰC HÀNH – KHOA VLTL – PHCN</h2><p>Họ tên: <b>${esc(r.n)}</b> – Ngày sinh: ${esc(r.d)}<br>Đối tượng: ${esc(r.t)}${r.ph&&r.t=='Cử nhân PHCN'?' – '+esc(r.ph):''} – Bộ đề số ${r.set}<br>Thời điểm nộp: ${esc(r.at)}<br>Kết quả: ${r.ok}/${r.tot} câu đúng – Điểm: <b>${r.sc}</b>/10</p><hr>${r.qs.map((q,k)=>`<div class='q'><b>Câu ${k+1}.</b> ${esc(q.q)}${q.o.map((t,m)=>`<div class='${m==q.a?'ok':(r.ans[k]==m?'bad':'')}'>${'ABCD'[m]}. ${esc(t)}${m==q.a?' ✔':''}${r.ans[k]==m?' ◄ thí sinh chọn':''}</div>`).join('')}</div>`).join('')}</body></html>`}
 async function saveF(name,data){try{const dl=await claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:name,data})}catch(e){}}
-function delResult(ix){
+async function delResult(ix){
   const r=results[ix];
   if(!r)return;
-  const msg='XÓA kết quả thi của:\n\n• '+r.n+' ('+(r.t||'')+')\n• Điểm: '+(r.sc!=null?r.sc:'—')+(r.tot?' ('+r.ok+'/'+r.tot+')':'')+'\n\nLưu ý: Bảng điểm / file đã lưu trên Drive KHÔNG bị xóa.\nChỉ xóa dòng trên web.\n\nBạn chắc chắn muốn xóa?';
-  if(!confirm(msg))return;
-  if(!confirm('Xác nhận lần 2: Xóa vĩnh viễn kết quả này trên web?'))return;
+  const msg='Xóa kết quả thi của: '+r.n+' ('+(r.t||'')+') — Điểm: '+(r.sc!=null?r.sc:'—')+(r.tot?' ('+r.ok+'/'+r.tot+')':'')+'. File đã lưu trên Drive không bị xóa, chỉ xóa dòng trên web.';
+  const ok1=await uiConfirm(msg,'Xóa kết quả thi');
+  if(!ok1)return;
+  const ok2=await uiConfirm('Xác nhận lần 2: xóa vĩnh viễn kết quả này trên web?','Xác nhận xóa');
+  if(!ok2)return;
   results.splice(ix,1);
   SV('res',results);
   toast('Đã xóa kết quả của '+r.n);
   if(typeof admin2==='function')admin2();
-  else if(typeof admin==='function')admin();
 }
 function dlr(ix){const r=results[ix];if(!r||!r.qs)return alert('Không có dữ liệu đề thi');const sl=r.n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\W+/g,'_');saveF('de_thi_'+sl+'_de'+r.set+'.doc',new TextEncoder().encode(paperHTML(r)))}
 function dlPin(ix){const p=prompt('Mật khẩu quản trị');if(!p)return;if(!OK)return alert('Chưa cấu hình kết nối Google Drive');api({action:'auth'},{pin:p}).then(r=>{if(r.ok)dlr(ix);else alert('Sai mật khẩu')}).catch(()=>alert('Không kết nối được máy chủ'))}
@@ -1007,7 +1100,7 @@ wr('rooms',()=>{CUR=null});wr('rules',()=>{CUR=null});wr('rev',()=>{CUR=null});w
 const _ex1=ex1;ex1=function(i,li){CUR=null;if(!OK)return _ex1(i,li);pullCfg().then(()=>{const o=open[SUBJ[i]+'|'+LB[i][li]];if(CFG_ERR){alert('Không kết nối được máy chủ: '+CFG_ERR);return}if(!o||!o.on){alert('Mục thi này chưa được mở.');CUR=()=>subj(i);rerender();return}_ex1(i,li)})};
 const _setO=setO;setO=function(i,li,on,set){_setO(i,li,on,set);if(!OK)return;if(!ADM)return toast('Chưa đăng nhập Quản trị',1);api({action:'setConfig'},{pin:ADM,open}).then(r=>{if(r.ok)toast('Đã lưu cấu hình thi lên máy chủ');else toast('Chưa lưu được: '+(r.error||'lỗi'),1)}).catch(e=>toast('Chưa lưu được: '+e.message,1))};
 async function chkCfg(){try{const c=await api({action:'config'});if(c.error)throw new Error(c.error);const L=Object.entries(c.open||{}).map(([k,v])=>k+': '+(v.on?'MỞ':'đóng')+' – đề '+v.set);alert('Cấu hình đang lưu trên máy chủ:\n'+(L.join('\n')||'(chưa có)'))}catch(e){alert('Lỗi đọc cấu hình: '+e.message)}}
-const _dg=diagHTML;diagHTML=function(){return _dg().replace("<button class='s' onclick=reloadDrive()>Tải lại dữ liệu Drive</button>","<button class='s' onclick=reloadDrive()>Tải lại dữ liệu Drive</button> <button class='s' onclick=chkCfg()>Xem cấu hình mở thi đã lưu</button>")};
+const _dg=diagHTML;diagHTML=function(){return _dg().replace("<button class='s' onclick=reloadDrive()>Tải lại dữ liệu Drive</button>","<button class='s' onclick=reloadDrive()>Tải lại dữ liệu Drive</button>")};
 function bkFiles(i){let L=subjFiles(i,'bang kiem',false);if(!L.length)L=FILES.filter(f=>!SK.some((_,x)=>inSubj(f,x))&&nz(f.path.join(' ')+' '+f.name).includes('bang kiem'));return L.slice().sort((a,b)=>a.name.localeCompare(b.name,'vi',{numeric:true}))}
 function bkCount(i){return bkFiles(i).length||8}
 function bkList(i){const L=bkFiles(i);if(!L.length)return CHECK.map((t,k)=>trow([(k+1)+'. '+t[0],''])).join('');return `<div class='scr' style='max-height:560px'>${L.map((f,k)=>`<div class='tr' data-t='${nz(f.name)}' onclick="openF('${f.id}','${esc(f.name).replace(/'/g,'')}')"><span class='nb'>${k+1}</span><span class='tn'>${esc(f.name.replace(/\.[a-z0-9]+$/i,''))}</span><span class='pill'>Xem</span></div>`).join('')}</div>`}
@@ -1551,7 +1644,7 @@ async function expEnd(obj){
 
 // ===== Persist view + admin session =====
 const VIEW_KEY='vltl_view', ADM_KEY='vltl_adm';
-function saveView(k,arg){try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:k||'home',arg:arg||null,t:Date.now()}))}catch(e){}}
+function saveView(k,arg){try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:k||'home',arg:arg||null,t:Date.now()}))}catch(e){}try{if(typeof pushNav==='function')pushNav(k,arg)}catch(e){}}
 function restoreView(){
   try{
     const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');
@@ -1581,17 +1674,16 @@ if(_admin2)admin2=function(){saveView('admin');markAdminNav();_admin2.apply(this
 
 // Patch admin: bấm menu Quản trị viên → vào trang QT + đúng tiêu đề/tab
 const _admin=admin;
-admin=function(){
+admin=async function(){
   if(ADM){admin2();return}
-  const p=prompt('Mật khẩu quản trị');if(!p)return;
-  if(!OK)return alert('Chưa cấu hình kết nối Google Drive (API)');
-  api({action:'auth'},{pin:p}).then(r=>{
-    if(r.ok){
-      setAdm(p);toast('Đã đăng nhập quản trị');
-      // Bấm từ menu Quản trị → vào trang quản trị
-      admin2();
-    }else alert('Sai mật khẩu')
-  }).catch(()=>alert('Không kết nối được máy chủ Drive'));
+  const p=await uiPromptPass('Nhập mật khẩu để vào trang Quản trị viên.','Quản trị viên');
+  if(p===null||p==='')return;
+  if(!OK){await uiAlert('Chưa cấu hình kết nối Google Drive (API).','Lỗi kết nối');return}
+  try{
+    const r=await api({action:'auth'},{pin:p});
+    if(r&&r.ok){setAdm(p);toast('Đã đăng nhập quản trị');admin2()}
+    else await uiAlert('Sai mật khẩu. Vui lòng thử lại.','Đăng nhập thất bại');
+  }catch(e){await uiAlert('Không kết nối được máy chủ Drive.','Lỗi kết nối')}
 };
 
 // Patch boot: không gọi config lần 2 (pullCfg đã tải). Chỉ hydrate cache + refresh view.
