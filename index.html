@@ -164,22 +164,27 @@ function navigateTo(v){
   else if(v.k==='rooms')rooms();
   else if(v.k==='admin'){if(typeof admin2==='function'&&ADM)admin2();else home()}
   else if(v.k==='rev'&&typeof rev==='function')rev(v.arg);
-  else if(v.k==='ex1'&&typeof ex1==='function')ex1(v.arg,v.arg2);
+  else if(v.k==='ex1'&&typeof ex1==='function')ex1(v.arg,v.arg2!=null?v.arg2:0);
+  else if(v.k==='ex2'){
+    // Về form nhập thông tin (bước trước xác nhận)
+    if(typeof ex1==='function'&&S&&S.si!=null)ex1(S.si,S.li!=null?S.li:0);
+    else if(typeof ex1==='function')ex1(v.arg,v.arg2!=null?v.arg2:0);
+    else home();
+  }
   else if(v.k&&String(v.k).startsWith('s')&&String(v.k).length<=3)subj(+String(v.k).slice(1));
   else home();
 }
 function goBack(){
-  loadNavHist();
+  // Nếu đang ở bước xác nhận thi → về form nhập ngay (nhanh + giữ dữ liệu)
+  if(S&&S.draft&&NAV_HIST.length&&NAV_HIST[NAV_HIST.length-1]&&NAV_HIST[NAV_HIST.length-1].k==='ex2'){
+    backToExamForm();return;
+  }
   if(NAV_HIST.length>1){
     NAV_HIST.pop();
     const p=NAV_HIST[NAV_HIST.length-1];
     persistNavHist();
     NAV_SILENT=true;
-    try{
-      if(p)navigateTo(p);else home();
-    }finally{
-      NAV_SILENT=false;
-    }
+    try{if(p)navigateTo(p);else home()}finally{NAV_SILENT=false}
     try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:p&&p.k?p.k:'home',arg:p&&p.arg!=null?p.arg:null,t:Date.now()}))}catch(e){}
   }else{
     NAV_SILENT=true;
@@ -751,8 +756,40 @@ function rev(i){A.innerHTML=back()+`<div class='al'>Mỗi kỹ thuật có 5 câ
 function rules(){A.innerHTML=back()+`<div class='al'>Các học viên bắt buộc tuân thủ đúng các nội quy của Khoa.</div><div class='cg'><div class='p'><div class='ch2'>Nội quy của Khoa</div><p class='mut'>[Nội dung nội quy sẽ được bổ sung]</p></div><div class='p'><div class='ch2'>Đơn xin nghỉ phép</div><p class='mut'>Đính kèm đơn xin nghỉ phép của Khoa.</p><button disabled style='opacity:.5'>Tải đơn (chưa có file)</button></div></div>`}
 const TK=['w','t7','cn'];function setTab(k){persistRM();TAB=TK[k];rooms()}
 function rooms(){const Tb={w:'Trong tuần 19–23/10',t7:'Thứ Bảy 31/10',cn:'Chủ Nhật 1/11'};A.innerHTML=back()+`<div class='p'><div class='tabs' style='margin:0 0 10px'>${TK.map((k,x)=>`<button class='${k==TAB?'on':'s'}' onclick=setTab(${x})>${Tb[k]}</button>`).join('')}</div><div class='mut'>Nhấn vào tên học viên (màu xanh lá) để xem thông tin. ${TAB=='w'?'':'Phòng 4.207–207B xếp chung vào P.207A.'}</div></div><div class='p'><div class='ch2'>Khu N4</div><div class='cols'><div class='stk'>${rm('201-202','P.201 - 202')}<div class='hl'>HÀNH LANG</div>${rm('208-209','P.208 - 209')}</div><div class='stk'>${rm('204-206','P.204 - 206')}${rm('207A','P.207A')}${rm('207B','P.207B')}</div></div></div><div class='p'><div class='ch2'>Khu N6</div><div class='cols'>${rm('6.216','P.6.216')}${rm('6.215','P.6.215')}${rm('6.214','P.6.214')}${rm('6.213','P.6.213','Nhân sự dùng chung với P.6.216')}</div></div>`}
-function ex1(i,li){const l=LB[i][li],o=open[SUBJ[i]+'|'+l];S={si:i,l,t:SUBJ[i],set:o.set};A.innerHTML=back()+`<div class='p' style='max-width:520px;margin:0 auto'><div class='ch2'>Thi – ${SUBJ[i]}${i==1?' · '+l:''}</div><label class='lbl'>Họ và tên</label><input class='fi' id=nm placeholder='Nguyễn Văn A'><label class='lbl'>Ngày sinh</label><input class='fi' id=db placeholder='dd/mm/yyyy'><button style='width:100%;margin-top:10px' onclick=ex2()>Tiếp tục</button></div>`}
-function ex2(){const n=$('#nm').value,d=$('#db').value;if(!n||!d)return alert('Vui lòng nhập đủ thông tin');const f=students.find(s=>norm(s.n)==norm(n)&&norm(s.d)==norm(d))||{n,d,from:'',to:''};S.st=f;A.innerHTML=back()+`<div class='p' style='max-width:560px;margin:0 auto'><div class='ch2'>Thông tin học viên</div><table class='tb'><tr><td>Họ tên</td><td><b>${f.n}</b></td></tr><tr><td>Ngày sinh</td><td><b>${f.d}</b></td></tr><tr><td>Thực hành tại khoa</td><td><b>${f.from||'?'} – ${f.to||'?'}</b></td></tr><tr><td>Bộ đề</td><td><b>${S.set}${S.si==1?' · '+S.l:''}</b></td></tr><tr><td>Số câu hỏi</td><td><b>${NQ[S.si]}</b></td></tr><tr><td>Thời gian làm bài</td><td><b>${NQ[S.si]*3/4} phút</b></td></tr></table>${f.from?'':`<p class=mut>Không tìm thấy trong danh sách học viên.</p>`}<button style='width:100%;margin-top:12px' onclick=start()>Xác nhận vào thi</button></div>`}
+function ex1(i,li){
+  const l=LB[i][li],o=open[SUBJ[i]+'|'+l];
+  // Giữ họ tên / ngày sinh đã nhập khi quay lại từ bước xác nhận
+  const keepSt=S&&S.st?S.st:null;
+  const keepDraft=S&&S.draft?S.draft:null;
+  S={si:i,li:li,l:l,t:SUBJ[i],set:o&&o.set,st:keepSt,draft:keepDraft};
+  if(typeof saveView==='function')saveView('ex1',i,li);
+  const prevN=(keepDraft&&keepDraft.n)||(keepSt&&keepSt.n)||'';
+  const prevD=(keepDraft&&keepDraft.d)||(keepSt&&keepSt.d)||'';
+  A.innerHTML=back()+`<div class='p' style='max-width:520px;margin:0 auto'><div class='ch2'>Thi – ${SUBJ[i]}${i==1?' · '+l:''}</div><label class='lbl'>Họ và tên</label><input class='fi' id=nm placeholder='Nguyễn Văn A' value="${String(prevN).replace(/"/g,'&quot;')}"><label class='lbl'>Ngày sinh</label><input class='fi' id=db placeholder='dd/mm/yyyy' value="${String(prevD).replace(/"/g,'&quot;')}"><button style='width:100%;margin-top:10px' onclick=ex2()>Tiếp tục</button></div>`;
+  // focus nhanh, không gọi API
+  try{const el=$('#nm');if(el)el.focus()}catch(e){}
+}
+function ex2(){
+  const n=($('#nm')&&$('#nm').value||'').trim(),d=($('#db')&&$('#db').value||'').trim();
+  if(!n||!d){if(typeof uiAlert==='function')uiAlert('Vui lòng nhập đủ họ tên và ngày sinh.','Thiếu thông tin');else alert('Vui lòng nhập đủ thông tin');return}
+  // Lưu draft ngay để Quay lại không mất dữ liệu
+  S.draft={n:n,d:d};
+  const f=students.find(s=>norm(s.n)==norm(n)&&norm(s.d)==norm(d))||{n:n,d:d,from:'',to:''};
+  S.st=f;
+  if(typeof saveView==='function')saveView('ex2',S.si,S.li);
+  A.innerHTML=`<div class="navrow"><button type="button" class="s" onclick="backToExamForm()">← Quay lại</button><button type="button" class="s" onclick="home()">Trang chủ</button></div>`+`<div class='p' style='max-width:560px;margin:0 auto'><div class='ch2'>Thông tin học viên</div><table class='tb'><tr><td>Họ tên</td><td><b>${esc(f.n)}</b></td></tr><tr><td>Ngày sinh</td><td><b>${esc(f.d)}</b></td></tr><tr><td>Thực hành tại khoa</td><td><b>${esc(f.from||'?')} – ${esc(f.to||'?')}</b></td></tr><tr><td>Bộ đề</td><td><b>${S.set}${S.si==1?' · '+esc(S.l):''}</b></td></tr><tr><td>Số câu hỏi</td><td><b>${NQ[S.si]}</b></td></tr><tr><td>Thời gian làm bài</td><td><b>${NQ[S.si]*3/4} phút</b></td></tr></table>${f.from?'':`<p class=mut>Không tìm thấy trong danh sách học viên.</p>`}<button style='width:100%;margin-top:12px' onclick=start()>Xác nhận vào thi</button></div>`;
+}
+// Quay lại form nhập từ trang xác nhận — nhanh, không đi vòng lịch sử nặng
+function backToExamForm(){
+  if(S&&S.si!=null){
+    NAV_SILENT=true;
+    try{
+      // bỏ entry ex2 khỏi lịch sử nếu có
+      if(NAV_HIST.length&&NAV_HIST[NAV_HIST.length-1].k==='ex2'){NAV_HIST.pop();persistNavHist()}
+      ex1(S.si,S.li!=null?S.li:0);
+    }finally{NAV_SILENT=false}
+  }else goBack();
+}
 function run(){const q=S.qs[S.i];A.innerHTML=`<div class='tmr'><span>Câu <b>${S.i+1}</b> / ${S.qs.length}</span><b id=tm>${fmt(S.left)}</b></div><div class='ex'><div class='p'><div style='font-size:16px;font-weight:600;color:var(--hd);margin-bottom:8px'>${q.q}</div>${q.o.map((o,k)=>`<div class='opt ${S.ans[S.i]==k?'sel':''}' onclick=pk(${k})><span class='ol'>${'ABCD'[k]}</span>${o}</div>`).join('')}<div style='display:flex;gap:8px;margin-top:12px;flex-wrap:wrap'><button class='s' onclick=nv(-1)>← Trước</button><button onclick=nv(1)>Tiếp →</button><button class='g4' style='margin-left:auto;color:#fff' onclick=sb()>Nộp bài</button></div></div><div class='p'><div class='ch2'>Danh sách câu hỏi</div><div class='pal'>${S.qs.map((_,k)=>`<span class='${S.ans[k]!=null?'d':''} ${k==S.i?'cur':''}' onclick=go(${k})>${k+1}</span>`).join('')}</div></div></div>`}
 function pk(k){S.ans[S.i]=k;run()}function nv(d){S.i=Math.max(0,Math.min(S.qs.length-1,S.i+d));run()}function go(k){S.i=k;run()}function sb(){if(confirm('Nộp bài?'))submit()}
 function submit(){clearInterval(S.tm);const tot=S.qs.length,ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length,sc=+(ok/tot*10).toFixed(2);results.push({n:S.st.n,d:S.st.d,t:S.t,ph:S.l,set:S.set,from:S.st.from||'',to:S.st.to||'',ok,tot,sc,at:new Date().toLocaleString('vi-VN')});SV('res',results);A.innerHTML=`<div class='p' style='max-width:520px;margin:0 auto;text-align:center'><div class='ch2' style='justify-content:center'>Kết quả bài thi</div><div class='big'>${sc}<span style='font-size:18px'>/10</span></div><p>Số câu đúng: <b>${ok}/${tot}</b></p><div class='bar'><i style='width:${ok/tot*100}%'></i></div><button style='margin-top:16px' onclick=home()>Về trang chủ</button></div>`}
