@@ -139,29 +139,52 @@ function home(){S={};A.innerHTML=`<h1>Chào mừng học viên đến thực hà
 
 // ===== Điều hướng Quay lại / Trang chủ + dialog ArchitectUI =====
 const NAV_HIST=[];
-function pushNav(k,arg){
-  const last=NAV_HIST[NAV_HIST.length-1];
-  if(last&&last.k===k&&String(last.arg)===String(arg))return;
-  NAV_HIST.push({k:k,arg:arg});
-  if(NAV_HIST.length>40)NAV_HIST.shift();
+let NAV_SILENT=false;
+function loadNavHist(){
+  try{
+    const a=JSON.parse(sessionStorage.getItem('vltl_nav_hist')||'null');
+    if(Array.isArray(a)&&a.length){NAV_HIST.length=0;a.forEach(x=>NAV_HIST.push(x))}
+  }catch(e){}
 }
-function navigateTo(v,fromHist){
+function persistNavHist(){
+  try{sessionStorage.setItem('vltl_nav_hist',JSON.stringify(NAV_HIST.slice(-40)))}catch(e){}
+}
+function pushNav(k,arg,arg2){
+  if(NAV_SILENT||!k)return;
+  const last=NAV_HIST[NAV_HIST.length-1];
+  if(last&&last.k===k&&String(last.arg)===String(arg)&&String(last.arg2)===String(arg2))return;
+  NAV_HIST.push({k:k,arg:arg,arg2:arg2});
+  if(NAV_HIST.length>40)NAV_HIST.shift();
+  persistNavHist();
+}
+function navigateTo(v){
   if(!v||!v.k){home();return}
   if(v.k==='home')home();
   else if(v.k==='rules')rules();
   else if(v.k==='rooms')rooms();
-  else if(v.k==='admin'&&typeof admin2==='function'&&ADM)admin2();
-  else if(v.k&&v.k.startsWith('s')&&v.k.length<=3)subj(+v.k.slice(1));
-  else if(v.k==='rev')rev(v.arg);
-  else if(v.k==='ex1')ex1(v.arg,v.arg2);
+  else if(v.k==='admin'){if(typeof admin2==='function'&&ADM)admin2();else home()}
+  else if(v.k==='rev'&&typeof rev==='function')rev(v.arg);
+  else if(v.k==='ex1'&&typeof ex1==='function')ex1(v.arg,v.arg2);
+  else if(v.k&&String(v.k).startsWith('s')&&String(v.k).length<=3)subj(+String(v.k).slice(1));
   else home();
 }
 function goBack(){
+  loadNavHist();
   if(NAV_HIST.length>1){
     NAV_HIST.pop();
     const p=NAV_HIST[NAV_HIST.length-1];
-    if(p)navigateTo(p,true);else home();
-  }else home();
+    persistNavHist();
+    NAV_SILENT=true;
+    try{
+      if(p)navigateTo(p);else home();
+    }finally{
+      NAV_SILENT=false;
+    }
+    try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:p&&p.k?p.k:'home',arg:p&&p.arg!=null?p.arg:null,t:Date.now()}))}catch(e){}
+  }else{
+    NAV_SILENT=true;
+    try{home()}finally{NAV_SILENT=false}
+  }
 }
 function back(){
   return `<div class="navrow"><button type="button" class="s" onclick="goBack()">← Quay lại</button><button type="button" class="s" onclick="home()">Trang chủ</button></div>`;
@@ -708,8 +731,8 @@ const tnm=t=>t[0].replace(/^\d+\.\s*/,''),tnu=t=>(t[0].match(/^\d+/)||[''])[0];
 function trow(t){const u=t[1];return `<div class='tr' data-t='${tnm(t).toLowerCase()}' ${u?`onclick="pdf('${u}','${tnm(t).replace(/'/g,'')}')"`:''}><span class='nb'>${tnu(t)}</span><span class='tn'>${tnm(t)}</span><span class='pill ${u?'':'x'}'>${u?'PDF':'Chưa có file'}</span></div>`}
 function flt(v){v=v.toLowerCase();document.querySelectorAll('.tr[data-t]').forEach(r=>r.style.display=r.dataset.t.includes(v)?'':'none')}
 let SUBJ_PANEL=null; // tech | bk | rev | null
-function openSubjPanel(i,p){SUBJ_PANEL=(SUBJ_PANEL===p)?null:p;subj(i)}
-function subj(i){const s=SUBJ[i],T1=TECH[i],nq=KEYS[i].length;pushNav('s'+i);
+function openSubjPanel(i,p){SUBJ_PANEL=(SUBJ_PANEL===p)?null:p;NAV_SILENT=true;try{subj(i)}finally{NAV_SILENT=false}}
+function subj(i){const s=SUBJ[i],T1=TECH[i],nq=KEYS[i].length;
 const ex=LB[i].map((l,li)=>{const o=open[s+'|'+l],ok=o&&o.on;return `<div class='c sj ${ok?'g2':'g4'}' style='margin-bottom:10px;opacity:${ok?1:.8}' ${ok?`onclick=ex1(${i},${li})`:''}><h2>${l}</h2><div class='mut'>${ok?'Đã mở – Đề số '+o.set+' – nhấn để vào thi':(CFG_ERR?'Lỗi kết nối máy chủ (bấm F5 để thử lại)':'Chờ Quản trị viên mở')}</div></div>`}).join('')||`<div class='c sj g4' style='opacity:.8'><h2>Thi kết thúc thực hành</h2><div class='mut'>Chưa có bộ đề cho nhóm này</div></div>`;
 const panelTech=`<div class='p subj-panel'><div class='ch2'>Danh mục kỹ thuật PHCN (TT 32/2023/TT-BYT)<span class='pill'>${T1.length}</span></div>${T1.length?`<input class='fi' placeholder='Tìm kỹ thuật…' oninput=flt(this.value)><div class='scr'>${T1.map(trow).join('')}</div>`:'<span class=mut>Chưa có danh mục cho nhóm này.</span>'}</div>`;
 const panelBk=`<div class='p subj-panel'><div class='ch2'>Bảng kiểm quy trình kỹ thuật</div>${typeof bkList==='function'?bkList(i):'<span class=mut>Đang tải…</span>'}</div>`;
@@ -1644,7 +1667,7 @@ async function expEnd(obj){
 
 // ===== Persist view + admin session =====
 const VIEW_KEY='vltl_view', ADM_KEY='vltl_adm';
-function saveView(k,arg){try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:k||'home',arg:arg||null,t:Date.now()}))}catch(e){}try{if(typeof pushNav==='function')pushNav(k,arg)}catch(e){}}
+function saveView(k,arg,arg2){try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:k||'home',arg:arg||null,t:Date.now()}))}catch(e){}try{if(typeof pushNav==='function')pushNav(k,arg,arg2)}catch(e){}}
 function restoreView(){
   try{
     const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');
@@ -1661,8 +1684,9 @@ try{const a=sessionStorage.getItem(ADM_KEY);if(a)ADM=a}catch(e){}
 function setAdm(p){ADM=p;try{if(p)sessionStorage.setItem(ADM_KEY,p);else sessionStorage.removeItem(ADM_KEY)}catch(e){}}
 function logoutAdm(){setAdm(null);toast('Đã thoát quản trị');try{const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');if(v&&v.k==='rooms')rooms();else home()}catch(e){home()}}
 
-// Patch navigation
-const _home=home,_rules=rules,_rooms=rooms,_subj=subj,_admin2=typeof admin2==='function'?admin2:null;
+// Patch navigation — luôn ghi lịch sử để nút Quay lại hoạt động
+try{loadNavHist()}catch(e){}
+const _home=home,_rules=rules,_rooms=rooms,_subj=subj,_revFn=typeof rev==='function'?rev:null,_ex1Fn=typeof ex1==='function'?ex1:null,_admin2=typeof admin2==='function'?admin2:null;
 function markAdminNav(){
   if(typeof T==='function')T('lock','Quản trị viên','Mở thi, chọn đề, danh sách học viên, kết quả','admin');
 }
@@ -1670,6 +1694,8 @@ home=function(){saveView('home');_home.apply(this,arguments)};
 rules=function(){saveView('rules');_rules.apply(this,arguments)};
 rooms=function(){saveView('rooms');const y=window.scrollY;_rooms.apply(this,arguments);requestAnimationFrame(()=>window.scrollTo(0,y))};
 subj=function(i){saveView('s'+i);_subj.apply(this,arguments)};
+if(_revFn)rev=function(i){saveView('rev',i);if(typeof T==='function')T('file','Bộ câu hỏi ôn tập',SUBJ[i]||'','s'+i);_revFn.apply(this,arguments)};
+if(_ex1Fn)ex1=function(i,li){saveView('ex1',i,li);if(typeof T==='function')T('file','Thi kết thúc thực hành',SUBJ[i]||'','s'+i);_ex1Fn.apply(this,arguments)};
 if(_admin2)admin2=function(){saveView('admin');markAdminNav();_admin2.apply(this,arguments)};
 
 // Patch admin: bấm menu Quản trị viên → vào trang QT + đúng tiêu đề/tab
