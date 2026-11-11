@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Đang chuyển hướng…</title>
+<script>
+(function () {
+  try {
+    var path = location.pathname + location.search + location.hash;
+    sessionStorage.setItem("vltl_spa_path", path);
+  } catch (e) {}
+  // Về index trong cùng repo GitHub Pages
+  var parts = location.pathname.split("/").filter(Boolean);
+  // Repo project page: /DaotaokhoaVLTL/...
+  var base = "/";
+  if (parts.length && parts[0].toLowerCase() === "daotaokhoavltl") {
+    base = "/DaotaokhoaVLTL/";
+  }
+  location.replace(base + "index.html");
+})();
+</script>
+</head>
+<body>
+<p style="font-family:system-ui,sans-serif;text-align:center;margin-top:20vh;color:#64748b">Đang mở trang…</p>
+</body>
+</html>
