@@ -149,6 +149,125 @@ function loadNavHist(){
 function persistNavHist(){
   try{sessionStorage.setItem('vltl_nav_hist',JSON.stringify(NAV_HIST.slice(-40)))}catch(e){}
 }
+
+// ===== URL routes (GitHub Pages + History API) =====
+const ROUTE_SUBJ=['Bacsi','Cunhan','Ysi','Khac'];
+function appBase(){
+  // /DaotaokhoaVLTL hoặc / khi chạy local
+  const p=location.pathname||'/';
+  if(p.indexOf('/DaotaokhoaVLTL')===0)return '/DaotaokhoaVLTL';
+  // file mở trực tiếp hoặc preview
+  const parts=p.split('/').filter(Boolean);
+  if(parts.length&&parts[parts.length-1].indexOf('.html')>=0)parts.pop();
+  if(!parts.length)return '';
+  // giữ 1 segment đầu nếu giống tên repo
+  return '';
+}
+function pathFromRoute(k,arg,arg2){
+  const b=appBase();
+  const join=s=> (b||'')+'/'+s.replace(/^\/+/,'');
+  if(!k||k==='home')return (b||'')+'/' || '/';
+  if(k==='rules')return join('Noiquy');
+  if(k==='rooms')return join('Phanphong');
+  if(k==='admin')return join('Quantri');
+  if(k==='rev'){
+    const si=+arg;const slug=ROUTE_SUBJ[si]||('DoiTuong'+(si+1));
+    return join(slug+'/Ontap');
+  }
+  if(k==='ex1'){
+    const si=+arg;const slug=ROUTE_SUBJ[si]||('DoiTuong'+(si+1));
+    const li=arg2!=null?+arg2:0;
+    const lab=(typeof LB!=='undefined'&&LB[si]&&LB[si][li])?String(LB[si][li]).replace(/\s+/g,''):'';
+    return join(slug+'/Thi'+(lab?'/'+encodeURIComponent(lab):''));
+  }
+  if(k==='ex2'){
+    const si=S&&S.si!=null?S.si:+arg;
+    const slug=ROUTE_SUBJ[si]||'Bacsi';
+    return join(slug+'/Thi/Xacnhan');
+  }
+  if(String(k).startsWith('s')&&String(k).length<=3){
+    const si=+String(k).slice(1);
+    return join(ROUTE_SUBJ[si]||('DoiTuong'+(si+1)));
+  }
+  return (b||'')+'/';
+}
+function routeFromPath(pathname){
+  let p=pathname||location.pathname||'/';
+  const b=appBase();
+  if(b&&p.indexOf(b)===0)p=p.slice(b.length);
+  p=p.replace(/\/index\.html$/i,'').replace(/\/+/g,'/');
+  if(p.charAt(0)!=='/')p='/'+p;
+  p=p.replace(/\/$/,'')||'/';
+  const seg=p.split('/').filter(Boolean).map(s=>{try{return decodeURIComponent(s)}catch(e){return s}});
+  if(!seg.length)return {k:'home'};
+  const a=(seg[0]||'').toLowerCase();
+  if(a==='noiquy')return {k:'rules'};
+  if(a==='phanphong'||a==='danhsachphanphong')return {k:'rooms'};
+  if(a==='quantri'||a==='admin')return {k:'admin'};
+  const si=ROUTE_SUBJ.findIndex(x=>x.toLowerCase()===a);
+  if(si>=0){
+    const b2=(seg[1]||'').toLowerCase();
+    if(b2==='ontap')return {k:'rev',arg:si};
+    if(b2==='thi'){
+      if((seg[2]||'').toLowerCase()==='xacnhan')return {k:'ex2',arg:si,arg2:0};
+      // map label → li nếu có
+      let li=0;
+      if(seg[2]&&typeof LB!=='undefined'&&LB[si]){
+        const lab=seg[2].toLowerCase();
+        const found=LB[si].findIndex(x=>String(x).replace(/\s+/g,'').toLowerCase()===lab);
+        if(found>=0)li=found;
+      }
+      return {k:'ex1',arg:si,arg2:li};
+    }
+    return {k:'s'+si};
+  }
+  // fallback slug không dấu / có dấu
+  if(a==='bacsi'||a==='bác sĩ'||a==='bác-sĩ')return {k:'s0'};
+  if(a==='cunhan'||a==='cửnhân'||a.indexOf('cunhan')>=0)return {k:'s1'};
+  if(a==='ysi'||a==='ysĩ'||a==='y-si')return {k:'s2'};
+  if(a==='khac'||a==='khác')return {k:'s3'};
+  return {k:'home'};
+}
+function syncUrl(k,arg,arg2,replace){
+  try{
+    const path=pathFromRoute(k,arg,arg2);
+    const cur=location.pathname.replace(/\/$/,'')||'/';
+    const next=path.replace(/\/$/,'')||'/';
+    // Chuẩn hóa so sánh
+    if(cur===next||cur===next+'/index.html')return;
+    const st={k:k,arg:arg,arg2:arg2};
+    if(replace)history.replaceState(st,'',path);
+    else history.pushState(st,'',path);
+  }catch(e){}
+}
+function applyRoute(v,fromPop){
+  if(!v||!v.k){home();return}
+  NAV_SILENT=!!fromPop;
+  try{
+    if(v.k==='home')home();
+    else if(v.k==='rules')rules();
+    else if(v.k==='rooms')rooms();
+    else if(v.k==='admin'){if(typeof ADM!=='undefined'&&ADM&&typeof admin2==='function')admin2();else if(typeof admin==='function')admin();else home()}
+    else if(v.k==='rev'&&typeof rev==='function')rev(v.arg);
+    else if(v.k==='ex1'&&typeof ex1==='function')ex1(v.arg,v.arg2!=null?v.arg2:0);
+    else if(v.k==='ex2'){
+      if(typeof ex1==='function'&&S&&S.si!=null)ex1(S.si,S.li!=null?S.li:0);
+      else if(typeof ex1==='function')ex1(v.arg,v.arg2!=null?v.arg2:0);
+      else home();
+    }
+    else if(String(v.k).startsWith('s'))subj(+String(v.k).slice(1));
+    else home();
+  }finally{NAV_SILENT=false}
+}
+window.addEventListener('popstate',function(ev){
+  try{
+    const st=ev.state;
+    if(st&&st.k){applyRoute(st,true);return}
+    const r=routeFromPath(location.pathname);
+    applyRoute(r,true);
+  }catch(e){}
+});
+
 function pushNav(k,arg,arg2){
   if(NAV_SILENT||!k)return;
   const last=NAV_HIST[NAV_HIST.length-1];
@@ -156,6 +275,7 @@ function pushNav(k,arg,arg2){
   NAV_HIST.push({k:k,arg:arg,arg2:arg2});
   if(NAV_HIST.length>40)NAV_HIST.shift();
   persistNavHist();
+  try{syncUrl(k,arg,arg2,false)}catch(e){}
 }
 function navigateTo(v){
   if(!v||!v.k){home();return}
@@ -184,11 +304,16 @@ function goBack(){
     const p=NAV_HIST[NAV_HIST.length-1];
     persistNavHist();
     NAV_SILENT=true;
-    try{if(p)navigateTo(p);else home()}finally{NAV_SILENT=false}
+    try{
+      if(p){
+        try{syncUrl(p.k,p.arg,p.arg2,true)}catch(e){}
+        navigateTo(p);
+      }else home();
+    }finally{NAV_SILENT=false}
     try{localStorage.setItem(VIEW_KEY,JSON.stringify({k:p&&p.k?p.k:'home',arg:p&&p.arg!=null?p.arg:null,t:Date.now()}))}catch(e){}
   }else{
     NAV_SILENT=true;
-    try{home()}finally{NAV_SILENT=false}
+    try{try{syncUrl('home',null,null,true)}catch(e){}home()}finally{NAV_SILENT=false}
   }
 }
 function back(){
@@ -784,8 +909,8 @@ function backToExamForm(){
   if(S&&S.si!=null){
     NAV_SILENT=true;
     try{
-      // bỏ entry ex2 khỏi lịch sử nếu có
       if(NAV_HIST.length&&NAV_HIST[NAV_HIST.length-1].k==='ex2'){NAV_HIST.pop();persistNavHist()}
+      try{syncUrl('ex1',S.si,S.li!=null?S.li:0,true)}catch(e){}
       ex1(S.si,S.li!=null?S.li:0);
     }finally{NAV_SILENT=false}
   }else goBack();
@@ -1073,10 +1198,8 @@ async function delResult(ix){
   const r=results[ix];
   if(!r)return;
   const msg='Xóa kết quả thi của: '+r.n+' ('+(r.t||'')+') — Điểm: '+(r.sc!=null?r.sc:'—')+(r.tot?' ('+r.ok+'/'+r.tot+')':'')+'. File đã lưu trên Drive không bị xóa, chỉ xóa dòng trên web.';
-  const ok1=await uiConfirm(msg,'Xóa kết quả thi');
-  if(!ok1)return;
-  const ok2=await uiConfirm('Xác nhận lần 2: xóa vĩnh viễn kết quả này trên web?','Xác nhận xóa');
-  if(!ok2)return;
+  const ok=await uiConfirm(msg,'Xóa kết quả thi');
+  if(!ok)return;
   results.splice(ix,1);
   SV('res',results);
   toast('Đã xóa kết quả của '+r.n);
@@ -1774,7 +1897,30 @@ subj=function(i){
 
 try{loadPersistedRM()}catch(e){}
 try{if(typeof hydrateStudentsFromCache==='function')hydrateStudentsFromCache()}catch(e){}
-restoreView();
+// Khôi phục path từ 404.html (GitHub Pages SPA)
+try{
+  const spa=sessionStorage.getItem('vltl_spa_path');
+  if(spa){
+    sessionStorage.removeItem('vltl_spa_path');
+    history.replaceState(null,'',spa);
+  }
+}catch(e){}
+// Ưu tiên URL trên thanh địa chỉ; không có route thì dùng localStorage
+(function bootRoute(){
+  try{
+    const r=routeFromPath(location.pathname);
+    const isIndex=/\/?(index\.html)?$/i.test((location.pathname||'').replace(appBase(),'')||'/');
+    if(r&&r.k&&r.k!=='home'){
+      applyRoute(r,true);
+      return;
+    }
+    if(!isIndex&&r&&r.k==='home'){
+      // path lạ → home
+      home();return;
+    }
+  }catch(e){}
+  try{restoreView()}catch(e){home()}
+})();
 // Ưu tiên tải config ngay (học viên + phòng) — không chờ tree
 if(typeof pullCfg==='function')pullCfg().then(()=>{try{if(typeof rerender==='function')rerender()}catch(e){}}).catch(()=>{});
 boot();
