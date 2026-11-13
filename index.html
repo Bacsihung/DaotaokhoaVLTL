@@ -170,6 +170,14 @@ function pathFromRoute(k,arg,arg2){
   if(k==='rules')return join('Noiquy');
   if(k==='rooms')return join('Phanphong');
   if(k==='admin')return join('Quantri');
+  if(k==='stech'){
+    const si=+arg;const slug=ROUTE_SUBJ[si]||('DoiTuong'+(si+1));
+    return join(slug+'/Danhmuc');
+  }
+  if(k==='sbk'){
+    const si=+arg;const slug=ROUTE_SUBJ[si]||('DoiTuong'+(si+1));
+    return join(slug+'/Bangkiem');
+  }
   if(k==='rev'){
     const si=+arg;const slug=ROUTE_SUBJ[si]||('DoiTuong'+(si+1));
     return join(slug+'/Ontap');
@@ -208,6 +216,8 @@ function routeFromPath(pathname){
   if(si>=0){
     const b2=(seg[1]||'').toLowerCase();
     if(b2==='ontap')return {k:'rev',arg:si};
+    if(b2==='danhmuc'||b2==='kythuat')return {k:'stech',arg:si};
+    if(b2==='bangkiem'||b2==='qtktt')return {k:'sbk',arg:si};
     if(b2==='thi'){
       if((seg[2]||'').toLowerCase()==='xacnhan')return {k:'ex2',arg:si,arg2:0};
       // map label → li nếu có
@@ -248,6 +258,8 @@ function applyRoute(v,fromPop){
     else if(v.k==='rules')rules();
     else if(v.k==='rooms')rooms();
     else if(v.k==='admin'){if(typeof ADM!=='undefined'&&ADM&&typeof admin2==='function')admin2();else if(typeof admin==='function')admin();else home()}
+    else if(v.k==='stech'&&typeof subjTech==='function')subjTech(v.arg);
+    else if(v.k==='sbk'&&typeof subjBk==='function')subjBk(v.arg);
     else if(v.k==='rev'&&typeof rev==='function')rev(v.arg);
     else if(v.k==='ex1'&&typeof ex1==='function')ex1(v.arg,v.arg2!=null?v.arg2:0);
     else if(v.k==='ex2'){
@@ -283,6 +295,8 @@ function navigateTo(v){
   else if(v.k==='rules')rules();
   else if(v.k==='rooms')rooms();
   else if(v.k==='admin'){if(typeof admin2==='function'&&ADM)admin2();else home()}
+  else if(v.k==='stech'&&typeof subjTech==='function')subjTech(v.arg);
+  else if(v.k==='sbk'&&typeof subjBk==='function')subjBk(v.arg);
   else if(v.k==='rev'&&typeof rev==='function')rev(v.arg);
   else if(v.k==='ex1'&&typeof ex1==='function')ex1(v.arg,v.arg2!=null?v.arg2:0);
   else if(v.k==='ex2'){
@@ -860,23 +874,36 @@ function back(){return `<div class='navrow'><button type='button' class='s' oncl
 const tnm=t=>t[0].replace(/^\d+\.\s*/,''),tnu=t=>(t[0].match(/^\d+/)||[''])[0];
 function trow(t){const u=t[1];return `<div class='tr' data-t='${tnm(t).toLowerCase()}' ${u?`onclick="pdf('${u}','${tnm(t).replace(/'/g,'')}')"`:''}><span class='nb'>${tnu(t)}</span><span class='tn'>${tnm(t)}</span><span class='pill ${u?'':'x'}'>${u?'PDF':'Chưa có file'}</span></div>`}
 function flt(v){v=v.toLowerCase();document.querySelectorAll('.tr[data-t]').forEach(r=>r.style.display=r.dataset.t.includes(v)?'':'none')}
-let SUBJ_PANEL=null; // tech | bk | rev | null
-function openSubjPanel(i,p){SUBJ_PANEL=(SUBJ_PANEL===p)?null:p;NAV_SILENT=true;try{subj(i)}finally{NAV_SILENT=false}}
-function subj(i){const s=SUBJ[i],T1=TECH[i],nq=KEYS[i].length;
-const ex=LB[i].map((l,li)=>{const o=open[s+'|'+l],ok=o&&o.on;return `<div class='c sj ${ok?'g2':'g4'}' style='margin-bottom:10px;opacity:${ok?1:.8}' ${ok?`onclick=ex1(${i},${li})`:''}><h2>${l}</h2><div class='mut'>${ok?'Đã mở – Đề số '+o.set+' – nhấn để vào thi':(CFG_ERR?'Lỗi kết nối máy chủ (bấm F5 để thử lại)':'Chờ Quản trị viên mở')}</div></div>`}).join('')||`<div class='c sj g4' style='opacity:.8'><h2>Thi kết thúc thực hành</h2><div class='mut'>Chưa có bộ đề cho nhóm này</div></div>`;
-const panelTech=`<div class='p subj-panel'><div class='ch2'>Danh mục kỹ thuật PHCN (TT 32/2023/TT-BYT)<span class='pill'>${T1.length}</span></div>${T1.length?`<input class='fi' placeholder='Tìm kỹ thuật…' oninput=flt(this.value)><div class='scr'>${T1.map(trow).join('')}</div>`:'<span class=mut>Chưa có danh mục cho nhóm này.</span>'}</div>`;
-const panelBk=`<div class='p subj-panel'><div class='ch2'>Bảng kiểm quy trình kỹ thuật</div>${typeof bkList==='function'?bkList(i):'<span class=mut>Đang tải…</span>'}</div>`;
-const panelRev=nq
-  ?`<div class='p subj-panel'><div class='ch2'>Bộ câu hỏi trắc nghiệm ôn tập<span class='pill'>${nq*5}</span></div><p class='mut'>Mỗi kỹ thuật có 5 câu. Bấm để xem toàn bộ câu hỏi ôn tập.</p><button onclick=rev(${i})>Mở bộ câu hỏi ôn tập</button></div>`
-  :`<div class='p subj-panel'><div class='ch2'>Bộ câu hỏi trắc nghiệm ôn tập</div><p class='mut'>Đang cập nhật</p></div>`;
-const openPanel=SUBJ_PANEL==='tech'?panelTech:(SUBJ_PANEL==='bk'?panelBk:(SUBJ_PANEL==='rev'?panelRev:''));
-A.innerHTML=back()+`<div class='gw'>
-  <div class='wg g1 clk ${SUBJ_PANEL==='tech'?'on':''}' onclick=openSubjPanel(${i},'tech')><b>${T1.length}</b><span>Kỹ thuật trong danh mục</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>${SUBJ_PANEL==='tech'?'Đang mở · bấm để đóng':'Bấm để xem danh mục'}</div></div>
-  <div class='wg g2 clk ${SUBJ_PANEL==='bk'?'on':''}' onclick=openSubjPanel(${i},'bk')><b>${typeof bkCount==='function'?bkCount(i):'—'}</b><span>Bảng kiểm quy trình</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>${SUBJ_PANEL==='bk'?'Đang mở · bấm để đóng':'Bấm để xem bảng kiểm'}</div></div>
-  <div class='wg g3 clk ${SUBJ_PANEL==='rev'?'on':''}' onclick=openSubjPanel(${i},'rev')><b>${nq*5}</b><span>Câu hỏi ôn tập</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>${SUBJ_PANEL==='rev'?'Đang mở · bấm để đóng':'Bấm để xem câu hỏi'}</div></div>
+
+// Trang đối tượng: 3 ô → trang riêng (không mở panel dưới)
+function subjTech(i){
+  if(typeof saveView==='function')saveView('stech',i);
+  if(typeof T==='function')T('file','Danh mục kỹ thuật',SUBJ[i]||'','s'+i);
+  const T1=TECH[i]||[];
+  A.innerHTML=back()+`<div class='p'><div class='ch2'>Danh mục kỹ thuật PHCN (TT 32/2023/TT-BYT)<span class='pill'>${T1.length}</span></div>
+    ${T1.length?`<input class='fi' placeholder='Tìm kỹ thuật…' oninput=flt(this.value)><div class='scr'>${T1.map(trow).join('')}</div>`:'<span class=mut>Chưa có danh mục cho nhóm này.</span>'}
+  </div>`;
+}
+function subjBk(i){
+  if(typeof saveView==='function')saveView('sbk',i);
+  if(typeof T==='function')T('file','Bảng kiểm quy trình',SUBJ[i]||'','s'+i);
+  A.innerHTML=back()+`<div class='p'><div class='ch2'>Bảng kiểm quy trình kỹ thuật – ${esc(SUBJ[i]||'')}</div>
+    ${typeof bkList==='function'?bkList(i):'<span class=mut>Đang tải…</span>'}
+  </div>`;
+}
+function subj(i){
+  const s=SUBJ[i],T1=TECH[i],nq=KEYS[i].length;
+  const ex=LB[i].map((l,li)=>{
+    const o=open[s+'|'+l],ok=o&&o.on;
+    return `<div class='c sj ${ok?'g2':'g4'}' style='margin-bottom:10px;opacity:${ok?1:.8}' ${ok?`onclick=ex1(${i},${li})`:''}><h2>${l}</h2><div class='mut'>${ok?'Đã mở – Đề số '+o.set+' – nhấn để vào thi':(CFG_ERR?'Lỗi kết nối máy chủ (bấm F5 để thử lại)':'Chờ Quản trị viên mở')}</div></div>`;
+  }).join('')||`<div class='c sj g4' style='opacity:.8'><h2>Thi kết thúc thực hành</h2><div class='mut'>Chưa có bộ đề cho nhóm này</div></div>`;
+  A.innerHTML=back()+`<div class='gw'>
+  <div class='wg g1 clk' onclick=subjTech(${i})><b>${T1.length}</b><span>Kỹ thuật trong danh mục</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>Bấm để mở danh mục</div></div>
+  <div class='wg g2 clk' onclick=subjBk(${i})><b>${typeof bkCount==='function'?bkCount(i):'—'}</b><span>Bảng kiểm quy trình</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>Bấm để mở bảng kiểm</div></div>
+  <div class='wg g3 clk' onclick=rev(${i})><b>${nq*5}</b><span>Câu hỏi ôn tập</span><div class='mut' style='opacity:.9;font-size:12px;margin-top:4px'>Bấm để mở câu hỏi</div></div>
 </div>
-${openPanel}
-<div style='margin-top:14px'><div class='zone'>Thi kết thúc thực hành</div>${ex}</div>`}
+<div style='margin-top:14px'><div class='zone'>Thi kết thúc thực hành</div>${ex}</div>`;
+}
 function rev(i){A.innerHTML=back()+`<div class='al'>Mỗi kỹ thuật có 5 câu ôn tập. Bấm vào kỹ thuật để xem câu hỏi, bấm “Đáp án” để xem đáp án.${i==1?' (Chưa có câu hỏi cho 5 kỹ thuật: nẹp AFO, Frenkel, bồn bóng nhỏ, chườm ngải cứu và lượng giá chức năng người khuyết tật.)':''}</div>`+KEYS[i].map((k,ti)=>`<details class='ac'><summary><span class='nb'>${ti+1}</span><span class='tn'>${QS[k].t}</span><span class='pill'>5 câu</span></summary><div class='bd'>`+QS[k].q.slice(0,5).map((x,j)=>{const o=opts(x,rng(11*j+ti+3));return `<div class='qq'><b>Câu ${j+1}.</b> ${o.q}${o.o.map((t,m)=>`<div class='op'><span class='ol'>${'ABCD'[m]}</span>${t}</div>`).join('')}<details><summary class='mut' style='cursor:pointer'>Đáp án</summary><b style='color:#3ac47d'>${'ABCD'[o.a]}. ${o.o[o.a]}</b></details></div>`}).join('')+`</div></details>`).join('')}
 function rules(){A.innerHTML=back()+`<div class='al'>Các học viên bắt buộc tuân thủ đúng các nội quy của Khoa.</div><div class='cg'><div class='p'><div class='ch2'>Nội quy của Khoa</div><p class='mut'>[Nội dung nội quy sẽ được bổ sung]</p></div><div class='p'><div class='ch2'>Đơn xin nghỉ phép</div><p class='mut'>Đính kèm đơn xin nghỉ phép của Khoa.</p><button disabled style='opacity:.5'>Tải đơn (chưa có file)</button></div></div>`}
 const TK=['w','t7','cn'];function setTab(k){persistRM();TAB=TK[k];rooms()}
@@ -1832,7 +1859,8 @@ function restoreView(){
   try{
     const v=JSON.parse(localStorage.getItem(VIEW_KEY)||'null');
     if(!v||!v.k){home();return}
-    if(v.k==='home')home();
+    if(typeof applyRoute==='function')applyRoute(v,true);
+    else if(v.k==='home')home();
     else if(v.k==='rules')rules();
     else if(v.k==='rooms')rooms();
     else if(v.k&&v.k.startsWith('s')&&v.k.length<=3)subj(+v.k.slice(1));
