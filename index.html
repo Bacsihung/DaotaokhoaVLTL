@@ -182,6 +182,7 @@ function pathFromRoute(k,arg,arg2){
   if(!k||k==='home')return (b||'')+'/' || '/';
   if(k==='rules')return join('Noiquy');
   if(k==='rooms')return join('Phanphong');
+  if(k==='admin-dash')return join('Quantri/Dashboard');
   if(k==='admin')return join('Quantri');
   if(k==='stech'){
     const si=+arg;const slug=ROUTE_SUBJ[si]||('DoiTuong'+(si+1));
@@ -224,7 +225,7 @@ function routeFromPath(pathname){
   const a=(seg[0]||'').toLowerCase();
   if(a==='noiquy')return {k:'rules'};
   if(a==='phanphong'||a==='danhsachphanphong')return {k:'rooms'};
-  if(a==='quantri'||a==='admin')return {k:'admin'};
+  if(a==='quantri'||a==='admin'){if((seg[1]||'').toLowerCase()==='dashboard')return {k:'admin-dash'};return {k:'admin'};}
   const si=ROUTE_SUBJ.findIndex(x=>x.toLowerCase()===a);
   if(si>=0){
     const b2=(seg[1]||'').toLowerCase();
@@ -270,7 +271,8 @@ function applyRoute(v,fromPop){
     if(v.k==='home')home();
     else if(v.k==='rules')rules();
     else if(v.k==='rooms')rooms();
-    else if(v.k==='admin'){if(typeof ADM!=='undefined'&&ADM&&typeof admin2==='function')admin2();else if(typeof admin==='function')admin();else home()}
+    else if(v.k==='admin-dash'&&typeof adminDashPage==='function'&&ADM)adminDashPage();
+  else if(v.k==='admin'){if(typeof ADM!=='undefined'&&ADM&&typeof admin2==='function')admin2();else if(typeof admin==='function')admin();else home()}
     else if(v.k==='stech'&&typeof subjTech==='function')subjTech(v.arg);
     else if(v.k==='sbk'&&typeof subjBk==='function')subjBk(v.arg);
     else if(v.k==='rev'&&typeof rev==='function')rev(v.arg);
@@ -307,6 +309,7 @@ function navigateTo(v){
   if(v.k==='home')home();
   else if(v.k==='rules')rules();
   else if(v.k==='rooms')rooms();
+  else if(v.k==='admin-dash'&&typeof adminDashPage==='function'&&ADM)adminDashPage();
   else if(v.k==='admin'){if(typeof admin2==='function'&&ADM)admin2();else home()}
   else if(v.k==='stech'&&typeof subjTech==='function')subjTech(v.arg);
   else if(v.k==='sbk'&&typeof subjBk==='function')subjBk(v.arg);
@@ -1374,6 +1377,23 @@ function buildDashStats(useDemo){
 }
 function adminDashHTML(){
   const st=buildDashStats(false);
+  const label=st.demo?'Minh họa':'Trực tiếp';
+  return `<div class='c hl-card' style='cursor:pointer;margin-bottom:12px' onclick='adminDashPage()'>
+    <h2 style='margin:0 0 6px;font-size:18px'>📊 Dashboard quản trị</h2>
+    <div class='mut' style='font-size:14px'>Tổng quan học viên, tỷ lệ đạt, chưa thi, điểm theo đề. <b>Nhấn để mở</b>.</div>
+    <div style='margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:13px'>
+      <span class='pill'>${st.totalStu} HV</span>
+      <span class='pill'>${st.totalExam} đã thi</span>
+      <span class='pill'>${st.totalPass} đạt</span>
+      <span class='pill'>${st.notYet.length} chưa thi</span>
+      <span class='mut'>· ${label}</span>
+    </div>
+  </div>`;
+}
+function adminDashPage(){
+  if(typeof saveView==='function')saveView('admin-dash');
+  if(typeof T==='function')T('lock','Dashboard','Tổng quan đào tạo học viên','admin');
+  const st=buildDashStats(false);
   const objs=['Bác sĩ','Cử nhân PHCN','Y sĩ'];
   const cards=`
     <div class='dash-grid'>
@@ -1385,18 +1405,18 @@ function adminDashHTML(){
       <div class='dash-card warn'><b>${st.notYet.length}</b><span>Chưa thi</span></div>
     </div>`;
   const objTable=`<div class='ov'><table class='tb'><tr><th>Đối tượng</th><th>Số HV</th><th>Đã thi</th><th>Đạt</th><th>Chưa đạt</th><th>Điểm TB</th></tr>
-    ${objs.map(o=>{const x=st.byObj[o]||{};const tb=x.nScore? (x.sum/x.nScore).toFixed(1):'—';
+    ${objs.map(o=>{const x=st.byObj[o]||{};const tb=x.nScore?(x.sum/x.nScore).toFixed(1):'—';
       return `<tr><td>${o}</td><td>${x.stu||0}</td><td>${x.exam||0}</td><td>${x.pass||0}</td><td>${x.fail||0}</td><td><b>${tb}</b></td></tr>`}).join('')}
   </table></div>`;
   const setRows=Object.keys(st.bySet).sort().map(k=>{
     const x=st.bySet[k];const tb=x.n?(x.sum/x.n).toFixed(1):'—';
     return `<tr><td>${esc(k)}</td><td>${x.n}</td><td><b>${tb}</b></td></tr>`;
   }).join('')||'<tr><td colspan=3 class=mut>Chưa có dữ liệu điểm theo đề</td></tr>';
-  const notRows=st.notYet.slice(0,30).map(s=>`<tr><td>${esc(s.n)}</td><td>${esc(_normObj(s.t))}</td><td>${esc(s.from||'—')} → ${esc(s.to||'—')}</td></tr>`).join('')
+  const notRows=st.notYet.slice(0,50).map(s=>`<tr><td>${esc(s.n)}</td><td>${esc(_normObj(s.t))}</td><td>${esc(s.from||'—')} → ${esc(s.to||'—')}</td></tr>`).join('')
     ||'<tr><td colspan=3 class=mut>Không có (hoặc đã thi hết / chưa có DS)</td></tr>';
-  return `<div class='p' id='adminDash'>
+  A.innerHTML=(typeof back==='function'?back():'')+`<div class='p' id='adminDash'>
     <div class='ch2'>Dashboard quản trị<span class='pill'>Tổng quan</span></div>
-    ${st.demo?`<div class='dash-demo'>📊 Đang xem <b>dữ liệu minh họa</b> (chưa có học viên / kết quả thi trên máy). Khi có dữ liệu thật, bảng sẽ tự cập nhật.</div>`:''}
+    ${st.demo?`<div class='dash-demo'>📊 Đang xem <b>dữ liệu minh họa</b>. Khi có học viên / kết quả thi, số liệu sẽ cập nhật tự động.</div>`:''}
     ${cards}
     <div class='dash-sec'><h4>Theo đối tượng</h4>${objTable}</div>
     <div class='dash-sec'><h4>Điểm trung bình theo bộ đề</h4>
@@ -1404,10 +1424,11 @@ function adminDashHTML(){
     </div>
     <div class='dash-sec'><h4>Chưa thi (${st.notYet.length})</h4>
       <div class='ov'><table class='tb'><tr><th>Họ tên</th><th>Đối tượng</th><th>Thời gian TH</th></tr>${notRows}</table></div>
-      ${st.notYet.length>30?`<p class='mut'>Chỉ hiện 30 dòng đầu.</p>`:''}
     </div>
-    <p class='mut' style='margin-top:8px'>Đạt = điểm ≥ 5. Kết quả vòng quay QTKT không tính vào điểm thi.</p>
+    <p class='mut' style='margin-top:8px'>Đạt = điểm ≥ 5. Vòng quay QTKT không tính vào điểm thi.</p>
+    <div style='margin-top:14px'><button type='button' onclick='admin2()'>← Về trang Quản trị</button></div>
   </div>`;
+  try{if(typeof syncUrl==='function')syncUrl('admin-dash',null,null,false)}catch(e){}
 }
 
 function admin2(){
