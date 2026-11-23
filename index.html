@@ -55,6 +55,19 @@ button.s{background:var(--pr2);color:var(--pr)}input,select{padding:8px;border:1
 .wg.clk.on{outline:2px solid #fff;box-shadow:0 0 0 3px rgba(43,87,151,.35)}
 .subj-panel{margin-top:12px}
 
+
+.dash-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:10px 0 14px}
+.dash-card{background:linear-gradient(135deg,var(--pr2),#fff);border:1px solid var(--bd);border-radius:12px;padding:14px 12px;text-align:center}
+.dash-card b{display:block;font-size:22px;font-weight:700;color:var(--pr);line-height:1.2}
+.dash-card span{font-size:12px;color:var(--mut)}
+.dash-card.warn{background:linear-gradient(135deg,#fef3c7,#fff)}
+.dash-card.warn b{color:#b45309}
+.dash-card.ok{background:linear-gradient(135deg,#dcfce7,#fff)}
+.dash-card.ok b{color:#15803d}
+.dash-sec{margin-top:12px}
+.dash-sec h4{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.dash-demo{font-size:12px;background:#eff6ff;color:#1e40af;border:1px dashed #93c5fd;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+
 </style></head><body><link href='https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap' rel='stylesheet'><style>
 :root{padding:0;--bg:#f1f4f6;--card:#fff;--tx:#495057;--hd:#343a40;--mut:#6c757d;--pr:#3f6ad8;--pr2:#e0e9fb;--bd:#e3e8ee;--sh:0 .47rem 2.2rem rgba(4,9,20,.03),0 .94rem 1.4rem rgba(4,9,20,.03),0 .25rem .53rem rgba(4,9,20,.05),0 .125rem .19rem rgba(4,9,20,.03)}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#10151f;--card:#1a2130;--tx:#c9d1e0;--hd:#e8edf7;--mut:#8b97ad;--pr:#6c93f5;--pr2:#232f4a;--bd:#2a3347}button{color:#0f1722!important}.s{color:var(--pr)!important}}
@@ -111,7 +124,7 @@ table.tb{width:100%;border-collapse:collapse}table.tb td,table.tb th{padding:10p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // ====== DỮ LIỆU MẪU – thay bằng dữ liệu thật (hoặc nhập Excel ở mục Quản trị) ======
-const API='https://script.google.com/macros/s/AKfycbyU3WfQDzlEstE-j8NdWUxpnaE6iCc_nrv8T_d2P70HV81ByvbqhfHHE0eGqGj_5k4N/exec',TOKEN='ZXCVBNMASDFGHJKL';const ADMIN_PIN=null;
+const API='https://script.google.com/macros/s/AKfycbyU3WfQDzlEstE-j8NdWUxpnaE6iCc_nrv8T_d2P70HV81ByvbqhfHHE0eGqGj_5k4N/exec',TOKEN='ZXCVBNMASDFGHJKL'/* giữ khớp Code.gs; không commit TOKEN thật lên repo public nếu có thể */;const ADMIN_PIN=null;
 const ROOMS=["P1","P2","P3","P4","P5","P6","P7","P8"];
 const mk=(b,s)=>s.split(";").map((x,i)=>{const[p,t]=x.split("|");return [(i+1)+". "+t,b+"#page="+p]});
 const PB="drv:0",PY="drv:2",PK="drv:1";
@@ -407,16 +420,27 @@ function imp(el,k){const f=el.files[0];if(!f)return;f.arrayBuffer().then(b=>{con
 if(k=="sv"){students=rows.map(r=>({n:r[0],d:r[1],from:r[2],to:r[3],room:r[4],t:r[5]}));SV("sv",students);if(OK&&ADM)api({action:'saveStudents'},{pin:ADM,students})}
 else{Q=rows.map(r=>({q:r[0],o:[r[1],r[2],r[3],r[4]],a:"ABCD".indexOf(String(r[5]).trim().toUpperCase())}));SV("qs",Q)}alert("Đã nhập "+rows.length+" dòng")})}
 function auto(){students.forEach((s,i)=>s.room=ROOMS[i%ROOMS.length]);SV("sv",students);alert("Đã phân phòng")}
-async function exp(){const H=["STT","Họ tên","Ngày sinh","Đối tượng","Từ ngày","Đến ngày","Số câu đúng","Tổng số câu","Điểm","Thời điểm nộp"];
-const ws=XLSX.utils.aoa_to_sheet([H,...results.map((r,i)=>[i+1,r.n,r.d,r.t,r.from,r.to,r.ok,r.tot,r.sc,r.at])]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"KetQuaThi");
-const d=XLSX.write(wb,{type:"array",bookType:"xlsx"});try{const dl=await claude.use("downloads");if(!dl)return alert("Không hỗ trợ tải file ở môi trường này");await dl.save({filename:"ket_qua_thi_VLTL.xlsx",data:new Uint8Array(d)})}catch(e){}}
+async function exp(){
+  if(typeof expEnd==='function'){expEnd('Bác sĩ');return}
+  if(typeof XLSX==='undefined'){alert('Chưa tải thư viện Excel');return}
+  const H=["STT","Họ tên","Ngày sinh","Đối tượng","Từ ngày","Đến ngày","Số câu đúng","Tổng số câu","Điểm","Thời điểm nộp"];
+  const ws=XLSX.utils.aoa_to_sheet([H,...results.map((r,i)=>[i+1,r.n,r.d,r.t,r.from,r.to,r.ok,r.tot,r.sc,r.at])]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"KetQuaThi");
+  try{XLSX.writeFile(wb,'ket_qua_thi_VLTL.xlsx')}catch(e){
+    const d=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+    const blob=new Blob([d],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ket_qua_thi_VLTL.xlsx';
+    document.body.appendChild(a);a.click();a.remove();
+  }
+}
+
 let PJ=null;const DOCS={};
 function loadPJ(){return PJ||(PJ=new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";ok()};s.onerror=no;document.head.appendChild(s)}))}
 function pdf(u){const [p,h]=u.split("#page=");let n=+h||1;const m=document.createElement("div");m.className="md";m.innerHTML=`<div style="width:100%;max-width:960px;height:100%;display:flex;flex-direction:column;padding:8px"><div style="margin-bottom:6px;color:#fff"><button id="px">✕ Đóng</button> <button class="s" id="pp">◀</button> <span id="pn"></span> <button class="s" id="pnx">▶</button> <button class="s" id="pd">Tải về</button></div><div id="pc" style="flex:1;overflow:auto;background:#fff;border-radius:8px;text-align:center;color:#333"><p>Đang tải…</p></div></div>`;document.body.appendChild(m);
 const q=s=>m.querySelector(s);q("#px").onclick=()=>m.remove();let doc,buf;
 const show=async()=>{if(!doc)return;n=Math.max(1,Math.min(doc.numPages,n));q("#pn").textContent=n+" / "+doc.numPages;const pg=await doc.getPage(n),box=q("#pc"),v0=pg.getViewport({scale:1}),sc=Math.min(2,(box.clientWidth-16)/v0.width),vp=pg.getViewport({scale:sc}),c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;c.style.maxWidth="100%";await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;box.replaceChildren(c);box.scrollTop=0};
 q("#pp").onclick=()=>{n--;show()};q("#pnx").onclick=()=>{n++;show()};
-q("#pd").onclick=async()=>{try{const dl=await claude.use("downloads");if(dl&&buf)await dl.save({filename:"quy_trinh_ky_thuat.pdf",data:new Uint8Array(buf)})}catch(e){}};
+q("#pd").onclick=async()=>{try{const dl=await null&&claude.use("downloads");if(dl&&buf)await dl.save({filename:"quy_trinh_ky_thuat.pdf",data:new Uint8Array(buf)})}catch(e){}};
 (async()=>{try{await loadPJ();if(!DOCS[p])DOCS[p]=fetch(p).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()});buf=await DOCS[p];doc=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;await show()}catch(e){q("#pc").innerHTML="<p>Không mở được file PDF ("+(e.message||e)+")</p>";delete DOCS[p]}})()}
 const QS={
 parafin:{t:'Điều trị bằng parafin',q:[
@@ -557,7 +581,7 @@ function submit(){clearInterval(S.tm);const tot=S.qs.length,ok=S.qs.filter((q,k)
 function setO(i,li,on,set){const id=SUBJ[i]+'|'+LB[i][li],o=open[id]||{on:false,set:1};if(on!==null)o.on=on;if(set!==null)o.set=set;open[id]=o;SV('open',open)}
 function admin2(){const rows=[0,1,2].map(i=>LB[i].map((l,li)=>{const o=open[SUBJ[i]+'|'+l]||{on:false,set:1};return `<p><label><input type=checkbox ${o.on?'checked':''} onchange=setO(${i},${li},this.checked,null)> ${SUBJ[i]} – ${l}</label> Đề: <select onchange=setO(${i},${li},null,+this.value)>${Array.from({length:NSET[i]},(_,k)=>`<option ${o.set==k+1?'selected':''}>${k+1}</option>`).join('')}</select></p>`}).join('')).join('');
 A.innerHTML=back()+`<div class='p'><h2>Quản trị</h2><h3>Mở thi và chọn đề</h3>${rows}<h3>Nhập danh sách học viên (Excel: Họ tên | Ngày sinh | Từ ngày | Đến ngày | Phòng | Đối tượng)</h3><input type=file accept='.xlsx,.xls' onchange=imp(this,'sv')><h3>Kết quả thi (${results.length})</h3><button onclick=exp()>Xuất Excel</button></div>`}
-async function exp(){const H=['STT','Họ tên','Ngày sinh','Đối tượng','Giai đoạn','Bộ đề','Từ ngày','Đến ngày','Số câu đúng','Tổng số câu','Điểm','Thời điểm nộp'];const ws=XLSX.utils.aoa_to_sheet([H,...results.map((r,i)=>[i+1,r.n,r.d,r.t,r.ph,r.set,r.from,r.to,r.ok,r.tot,r.sc,r.at])]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'KetQuaThi');const d=XLSX.write(wb,{type:'array',bookType:'xlsx'});try{const dl=await claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:'ket_qua_thi_VLTL.xlsx',data:new Uint8Array(d)})}catch(e){}}
+async function exp(){const H=['STT','Họ tên','Ngày sinh','Đối tượng','Giai đoạn','Bộ đề','Từ ngày','Đến ngày','Số câu đúng','Tổng số câu','Điểm','Thời điểm nộp'];const ws=XLSX.utils.aoa_to_sheet([H,...results.map((r,i)=>[i+1,r.n,r.d,r.t,r.ph,r.set,r.from,r.to,r.ok,r.tot,r.sc,r.at])]);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'KetQuaThi');const d=XLSX.write(wb,{type:'array',bookType:'xlsx'});try{const dl=await null&&claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:'ket_qua_thi_VLTL.xlsx',data:new Uint8Array(d)})}catch(e){}}
 Object.assign(QS,{
 songngan:{t:'Điều trị bằng sóng ngắn',q:[
 ['Tần số sóng ngắn thường dùng trong vật lý trị liệu là:','13,7 MHz và 27,3 MHz','1 MHz và 3 MHz','50 Hz và 100 Hz','20.000 Hz và 40.000 Hz'],
@@ -1218,9 +1242,46 @@ function mkExam(i,set){const r=Math.random;return shf(setPairs(i,set),r).map(p=>
 function score(c,N){const T=N*65/100;return +(c>=T?5+5*(c-T)/(N-T):5*c/T).toFixed(1)}
 function start(){S.qs=mkExam(S.si,S.set);S.ans={};S.i=0;S.dur=NQ[S.si]*45;S.left=S.dur;S.t0=Date.now();S.tm=setInterval(()=>{S.left=S.dur-Math.floor((Date.now()-S.t0)/1000);if(S.left<=0)return submit();const e=$('#tm');if(e)e.textContent=fmt(S.left)},1000);run()}
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function submit(){clearInterval(S.tm);const tot=S.qs.length,ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length,sc=score(ok,tot);results.push({n:S.st.n,d:S.st.d,t:S.t,ph:S.l,set:S.set,from:S.st.from||'',to:S.st.to||'',ok,tot,sc,at:new Date().toLocaleString('vi-VN'),qs:S.qs.map(q=>({q:q.q,o:q.o,a:q.a})),ans:S.ans});SV('res',results);const ix=results.length-1;A.innerHTML=`<div class='p' style='max-width:520px;margin:0 auto;text-align:center'><div class='ch2' style='justify-content:center'>Kết quả bài thi</div><div class='big'>${sc}<span style='font-size:18px'>/10</span></div><p>Số câu đúng: <b>${ok}/${tot}</b></p><div class='bar'><i style='width:${ok/tot*100}%'></i></div><div style='margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap'><button onclick=home()>Về trang chủ</button><button class='s' onclick=dlPin(${ix})>Tải đề thi của thí sinh (Quản trị viên)</button></div></div>`}
+function getPendingResults(){try{return JSON.parse(localStorage.getItem('vltl_pending_results')||'[]')}catch(e){return []}}
+function setPendingResults(a){try{localStorage.setItem('vltl_pending_results',JSON.stringify(a||[]))}catch(e){}}
+async function postResultToDrive(r,html){
+  if(!OK)throw new Error('offline');
+  return api({action:'result'},{r:r,html:html||''});
+}
+async function flushPendingResults(){
+  const q=getPendingResults();
+  if(!q.length||!OK)return;
+  const left=[];
+  for(const item of q){
+    try{
+      const res=await postResultToDrive(item.r,item.html||'');
+      if(!res||res.error)left.push(item);
+    }catch(e){left.push(item)}
+  }
+  setPendingResults(left);
+  if(q.length&&left.length<q.length)try{toast('Đã đồng bộ '+(q.length-left.length)+' kết quả thi lên Drive')}catch(e){}
+}
+function submit(){
+  clearInterval(S.tm);
+  const tot=S.qs.length,ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length,sc=score(ok,tot);
+  const r={n:S.st.n,d:S.st.d,t:S.t,ph:S.l,set:S.set,from:S.st.from||'',to:S.st.to||'',ok,tot,sc,at:new Date().toLocaleString('vi-VN'),qs:S.qs.map(q=>({q:q.q,o:q.o,a:q.a})),ans:S.ans};
+  results.push(r);SV('res',results);
+  const ix=results.length-1;
+  const htmlBrief='<p>'+esc(r.n)+' — '+esc(String(r.sc))+'/10 ('+r.ok+'/'+r.tot+')</p>';
+  // Gửi Drive ngay; nếu lỗi → xếp hàng chờ gửi lại
+  (async()=>{
+    try{
+      const res=await postResultToDrive(r,htmlBrief);
+      if(res&&res.error)throw new Error(res.error);
+    }catch(e){
+      const q=getPendingResults();q.push({r:r,html:htmlBrief,at:Date.now()});setPendingResults(q);
+      try{toast('Chưa gửi được lên Drive. Đã lưu máy, sẽ thử lại sau.',1)}catch(err){}
+    }
+  })();
+  A.innerHTML=`<div class='p' style='max-width:520px;margin:0 auto;text-align:center'><div class='ch2' style='justify-content:center'>Kết quả bài thi</div><div class='big'>${sc}<span style='font-size:18px'>/10</span></div><p>Số câu đúng: <b>${ok}/${tot}</b></p><div class='bar'><i style='width:${ok/tot*100}%'></i></div><div style='margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap'><button onclick=home()>Về trang chủ</button><button class='s' onclick=dlPin(${ix})>Tải đề thi của thí sinh (Quản trị viên)</button></div></div>`;
+}
 function paperHTML(r){return `<html><head><meta charset='utf-8'><title>Đề thi</title><style>body{font-family:'Times New Roman';font-size:12pt}.q{margin:8pt 0}.ok{color:#0a7d3a;font-weight:bold}.bad{color:#c00000}</style></head><body><h2 style='text-align:center'>ĐỀ THI KẾT THÚC THỰC HÀNH – KHOA VLTL – PHCN</h2><p>Họ tên: <b>${esc(r.n)}</b> – Ngày sinh: ${esc(r.d)}<br>Đối tượng: ${esc(r.t)}${r.ph&&r.t=='Cử nhân PHCN'?' – '+esc(r.ph):''} – Bộ đề số ${r.set}<br>Thời điểm nộp: ${esc(r.at)}<br>Kết quả: ${r.ok}/${r.tot} câu đúng – Điểm: <b>${r.sc}</b>/10</p><hr>${r.qs.map((q,k)=>`<div class='q'><b>Câu ${k+1}.</b> ${esc(q.q)}${q.o.map((t,m)=>`<div class='${m==q.a?'ok':(r.ans[k]==m?'bad':'')}'>${'ABCD'[m]}. ${esc(t)}${m==q.a?' ✔':''}${r.ans[k]==m?' ◄ thí sinh chọn':''}</div>`).join('')}</div>`).join('')}</body></html>`}
-async function saveF(name,data){try{const dl=await claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:name,data})}catch(e){}}
+async function saveF(name,data){try{const dl=await null&&claude.use('downloads');if(!dl)return alert('Không hỗ trợ tải file ở môi trường này');await dl.save({filename:name,data})}catch(e){}}
 async function delResult(ix){
   const r=results[ix];
   if(!r)return;
@@ -1234,6 +1295,121 @@ async function delResult(ix){
 }
 function dlr(ix){const r=results[ix];if(!r||!r.qs)return alert('Không có dữ liệu đề thi');const sl=r.n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\W+/g,'_');saveF('de_thi_'+sl+'_de'+r.set+'.doc',new TextEncoder().encode(paperHTML(r)))}
 function dlPin(ix){const p=prompt('Mật khẩu quản trị');if(!p)return;if(!OK)return alert('Chưa cấu hình kết nối Google Drive');api({action:'auth'},{pin:p}).then(r=>{if(r.ok)dlr(ix);else alert('Sai mật khẩu')}).catch(()=>alert('Không kết nối được máy chủ'))}
+
+// ===== Dashboard Admin =====
+function _normObj(t){
+  const s=String(t||'').toLowerCase();
+  if(/bác\s*sĩ|bac\s*si|^bs/.test(s))return 'Bác sĩ';
+  if(/cử\s*nhân|cu\s*nhan|ktv|phcn/.test(s))return 'Cử nhân PHCN';
+  if(/y\s*sĩ|y\s*si|^ys/.test(s))return 'Y sĩ';
+  if(/khác|khac/.test(s))return 'Khác';
+  return t||'Khác';
+}
+function buildDashStats(useDemo){
+  let stu=(typeof students!=='undefined'&&students&&students.length)?students.slice():[];
+  let res=(typeof results!=='undefined'&&results&&results.length)?results.filter(r=>r&&r.type!=='wheel'):[];
+  let demo=false;
+  if(useDemo||(!stu.length&&!res.length)){
+    demo=true;
+    stu=[
+      {n:'Nguyễn Văn A',d:'01/01/1998',t:'Bác sĩ',from:'01/10/2026',to:'30/11/2026'},
+      {n:'Trần Thị B',d:'02/02/1999',t:'Bác sĩ',from:'01/10/2026',to:'30/11/2026'},
+      {n:'Lê Văn C',d:'03/03/2000',t:'Cử nhân PHCN',from:'01/06/2026',to:'02/12/2026'},
+      {n:'Phạm Thị D',d:'04/04/2001',t:'Cử nhân PHCN',from:'01/06/2026',to:'02/12/2026'},
+      {n:'Hoàng Văn E',d:'05/05/2000',t:'Cử nhân PHCN',from:'01/06/2026',to:'02/12/2026'},
+      {n:'Võ Thị F',d:'06/06/1997',t:'Y sĩ',from:'01/10/2026',to:'30/11/2026'},
+      {n:'Đặng Văn G',d:'07/07/1998',t:'Y sĩ',from:'01/10/2026',to:'30/11/2026'}
+    ];
+    res=[
+      {n:'Nguyễn Văn A',d:'01/01/1998',t:'Bác sĩ',set:1,ok:32,tot:40,sc:8.2},
+      {n:'Trần Thị B',d:'02/02/1999',t:'Bác sĩ',set:2,ok:20,tot:40,sc:4.5},
+      {n:'Lê Văn C',d:'03/03/2000',t:'Cử nhân PHCN',set:1,ph:'POSTTEST',ok:45,tot:60,sc:7.1},
+      {n:'Phạm Thị D',d:'04/04/2001',t:'Cử nhân PHCN',set:1,ph:'POSTTEST',ok:50,tot:60,sc:8.5},
+      {n:'Võ Thị F',d:'06/06/1997',t:'Y sĩ',set:1,ok:28,tot:40,sc:6.8}
+    ];
+  }
+  const byObj={};
+  ['Bác sĩ','Cử nhân PHCN','Y sĩ','Khác'].forEach(o=>{byObj[o]={stu:0,exam:0,pass:0,fail:0,sum:0,nScore:0}});
+  stu.forEach(s=>{const o=_normObj(s.t);if(!byObj[o])byObj[o]={stu:0,exam:0,pass:0,fail:0,sum:0,nScore:0};byObj[o].stu++});
+  // latest score per student name+obj
+  const latest={};
+  res.forEach((r,idx)=>{
+    const o=_normObj(r.t);
+    const key=String(r.n||'').trim().toLowerCase()+'|'+o;
+    if(!latest[key]||idx>=(latest[key]._i||-1)){latest[key]={...r,_o:o,_i:idx}}
+  });
+  const examined=Object.values(latest);
+  examined.forEach(r=>{
+    const o=r._o||_normObj(r.t);
+    if(!byObj[o])byObj[o]={stu:0,exam:0,pass:0,fail:0,sum:0,nScore:0};
+    byObj[o].exam++;
+    const sc=parseFloat(r.sc);
+    if(!isNaN(sc)){byObj[o].sum+=sc;byObj[o].nScore++;if(sc>=5)byObj[o].pass++;else byObj[o].fail++}
+  });
+  // chưa thi: có trong DS, chưa có kết quả (không tính wheel)
+  const examinedKeys=new Set(Object.keys(latest));
+  const notYet=stu.filter(s=>{
+    const o=_normObj(s.t);
+    const key=String(s.n||'').trim().toLowerCase()+'|'+o;
+    return !examinedKeys.has(key);
+  });
+  // điểm TB theo bộ đề
+  const bySet={};
+  res.forEach(r=>{
+    if(r.type==='wheel')return;
+    const o=_normObj(r.t);
+    const set=r.set!=null?String(r.set):'—';
+    const k=o+' · đề '+set+(r.ph?' · '+r.ph:'');
+    if(!bySet[k])bySet[k]={n:0,sum:0};
+    const sc=parseFloat(r.sc);
+    if(!isNaN(sc)){bySet[k].n++;bySet[k].sum+=sc}
+  });
+  const totalStu=stu.length;
+  const totalExam=examined.length;
+  const totalPass=examined.filter(r=>parseFloat(r.sc)>=5).length;
+  const totalFail=examined.filter(r=>{const sc=parseFloat(r.sc);return !isNaN(sc)&&sc<5}).length;
+  const avgAll=examined.reduce((a,r)=>{const sc=parseFloat(r.sc);return isNaN(sc)?a:a+sc},0);
+  const avgN=examined.filter(r=>!isNaN(parseFloat(r.sc))).length;
+  return {demo,byObj,notYet,bySet,totalStu,totalExam,totalPass,totalFail,avg:avgN?avgAll/avgN:0};
+}
+function adminDashHTML(){
+  const st=buildDashStats(false);
+  const objs=['Bác sĩ','Cử nhân PHCN','Y sĩ'];
+  const cards=`
+    <div class='dash-grid'>
+      <div class='dash-card'><b>${st.totalStu}</b><span>Tổng học viên (DS)</span></div>
+      <div class='dash-card'><b>${st.totalExam}</b><span>Đã có bài thi</span></div>
+      <div class='dash-card ok'><b>${st.totalPass}</b><span>Đạt (≥ 5 điểm)</span></div>
+      <div class='dash-card warn'><b>${st.totalFail}</b><span>Chưa đạt (&lt; 5)</span></div>
+      <div class='dash-card'><b>${st.avg?st.avg.toFixed(1):'—'}</b><span>Điểm TB</span></div>
+      <div class='dash-card warn'><b>${st.notYet.length}</b><span>Chưa thi</span></div>
+    </div>`;
+  const objTable=`<div class='ov'><table class='tb'><tr><th>Đối tượng</th><th>Số HV</th><th>Đã thi</th><th>Đạt</th><th>Chưa đạt</th><th>Điểm TB</th></tr>
+    ${objs.map(o=>{const x=st.byObj[o]||{};const tb=x.nScore? (x.sum/x.nScore).toFixed(1):'—';
+      return `<tr><td>${o}</td><td>${x.stu||0}</td><td>${x.exam||0}</td><td>${x.pass||0}</td><td>${x.fail||0}</td><td><b>${tb}</b></td></tr>`}).join('')}
+  </table></div>`;
+  const setRows=Object.keys(st.bySet).sort().map(k=>{
+    const x=st.bySet[k];const tb=x.n?(x.sum/x.n).toFixed(1):'—';
+    return `<tr><td>${esc(k)}</td><td>${x.n}</td><td><b>${tb}</b></td></tr>`;
+  }).join('')||'<tr><td colspan=3 class=mut>Chưa có dữ liệu điểm theo đề</td></tr>';
+  const notRows=st.notYet.slice(0,30).map(s=>`<tr><td>${esc(s.n)}</td><td>${esc(_normObj(s.t))}</td><td>${esc(s.from||'—')} → ${esc(s.to||'—')}</td></tr>`).join('')
+    ||'<tr><td colspan=3 class=mut>Không có (hoặc đã thi hết / chưa có DS)</td></tr>';
+  return `<div class='p' id='adminDash'>
+    <div class='ch2'>Dashboard quản trị<span class='pill'>Tổng quan</span></div>
+    ${st.demo?`<div class='dash-demo'>📊 Đang xem <b>dữ liệu minh họa</b> (chưa có học viên / kết quả thi trên máy). Khi có dữ liệu thật, bảng sẽ tự cập nhật.</div>`:''}
+    ${cards}
+    <div class='dash-sec'><h4>Theo đối tượng</h4>${objTable}</div>
+    <div class='dash-sec'><h4>Điểm trung bình theo bộ đề</h4>
+      <div class='ov'><table class='tb'><tr><th>Bộ đề</th><th>Số bài</th><th>Điểm TB</th></tr>${setRows}</table></div>
+    </div>
+    <div class='dash-sec'><h4>Chưa thi (${st.notYet.length})</h4>
+      <div class='ov'><table class='tb'><tr><th>Họ tên</th><th>Đối tượng</th><th>Thời gian TH</th></tr>${notRows}</table></div>
+      ${st.notYet.length>30?`<p class='mut'>Chỉ hiện 30 dòng đầu.</p>`:''}
+    </div>
+    <p class='mut' style='margin-top:8px'>Đạt = điểm ≥ 5. Kết quả vòng quay QTKT không tính vào điểm thi.</p>
+  </div>`;
+}
+
 function admin2(){
   const rows=[0,1,2].map(i=>LB[i].map((l,li)=>{const o=open[SUBJ[i]+'|'+l]||{on:false,set:1};return `<tr><td>${SUBJ[i]}</td><td>${l}</td><td><label class='sw'><input type=checkbox ${o.on?'checked':''} onchange=setO(${i},${li},this.checked,null)><i></i></label></td><td><select onchange=setO(${i},${li},null,+this.value)>${Array.from({length:NSET[i]},(_,k)=>`<option ${o.set==k+1?'selected':''}>${k+1}</option>`).join('')}</select></td></tr>`}).join('')).join('');
   const rr=results.map((r,i)=>[r,i]).slice(-20).reverse();
@@ -1242,6 +1418,7 @@ function admin2(){
   const ssLink=`<a href="${SHEET_HV}" target="_blank" rel="noopener" style="color:var(--pr);font-weight:600">📊 Mở Google Sheet DS học viên</a>`;
   A.innerHTML=back()+`
   ${typeof aiExamHTML==='function'?aiExamHTML():''}
+  ${typeof adminDashHTML==='function'?adminDashHTML():''}
   <div class='p'><div class='ch2'>Vòng quay bảng kiểm QTKT – bật / tắt</div>
     <div class='ov'><table class='tb'><tr><th>Đối tượng</th><th>Số bảng kiểm</th><th>Bật</th></tr>${wheelRows}</table></div>
     <p class='mut'>Khi bật, học viên vào trang đối tượng sẽ thấy vòng quay. Kết quả (số + tên + link Drive) được lưu để tra cứu.</p>
@@ -1274,7 +1451,7 @@ function admin2(){
 }
 const OK=!/DÁN_/.test(API);let ADM='',FILES=[];
 const nz=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-async function api(p,body){const u=API+'?'+new URLSearchParams(Object.assign({token:TOKEN},p)).toString();const r=await fetch(u,body?{method:'POST',body:JSON.stringify(body)}:{});return r.json()}
+async function api(p,body){const u=API+'?'+new URLSearchParams(Object.assign({token:TOKEN,origin:(typeof location!=='undefined'&&location.origin)||''},p)).toString();const r=await fetch(u,body?{method:'POST',body:JSON.stringify(body)}:{});return r.json()}
 async function boot(){if(!OK)return;try{const [t,c]=await Promise.all([api({action:'tree'}),api({action:'config'})]);if(t.files)FILES=t.files;if(c.open)open=c.open;if(c.students&&c.students.length)students=c.students;SV('open',open);if(document.querySelector('.hero'))home()}catch(e){console.log(e)}}
 const SK=['bac si','cu nhan','y si','khac'];
 function inSubj(f,si){return f.path.some(x=>{const n=' '+nz(x)+' ';return n.includes(' '+SK[si]+' ')||(si==1&&(n.includes(' ky thuat vien ')||n.includes(' ktv ')))})}
@@ -1296,7 +1473,7 @@ const _a2=admin2;admin2=function(){_a2();A.insertAdjacentHTML('beforeend',diagHT
 
 const _submit=submit;submit=function(){_submit();const r=results[results.length-1];const box=A.querySelector('.p');if(box)box.insertAdjacentHTML('beforeend',`<p id=svst class=mut style='margin-top:10px'>${OK?'Đang lưu bài làm lên Google Drive…':''}</p>`);if(!OK)return;const set=m=>{const e=document.getElementById('svst');if(e)e.textContent=m};api({action:'result'},{r:{n:r.n,d:r.d,t:r.t,ph:r.ph,set:r.set,from:r.from,to:r.to,ok:r.ok,tot:r.tot,sc:r.sc,at:r.at},html:paperHTML(r)}).then(x=>set(x.ok?'Đã lưu bài làm và điểm lên Google Drive.':'Chưa lưu được lên Drive ('+(x.error||'lỗi')+'). Hãy báo Quản trị viên.')).catch(()=>set('Không kết nối được Drive. Bài làm vẫn được giữ trên máy này; Quản trị viên có thể tải lại đề.'))};
 let CFG_ERR='',FILES_ERR='',CUR=null;
-async function api(p,body){const u=API+'?'+new URLSearchParams(Object.assign({token:TOKEN,_t:Date.now()},p)).toString();const r=await fetch(u,Object.assign({cache:'no-store'},body?{method:'POST',body:JSON.stringify(body)}:{}));return r.json()}
+async function api(p,body){const u=API+'?'+new URLSearchParams(Object.assign({token:TOKEN,origin:(typeof location!=='undefined'&&location.origin)||'',_t:Date.now()},p)).toString();const r=await fetch(u,Object.assign({cache:'no-store'},body?{method:'POST',body:JSON.stringify(body)}:{}));return r.json()}
 function toast(m,bad){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99;padding:10px 16px;border-radius:6px;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.2);background:'+(bad?'#d92550':'#3ac47d');document.body.appendChild(d);setTimeout(()=>d.remove(),3500)}
 function rerender(){if(CUR)CUR()}
 async function pullCfg(){if(!OK)return;try{const c=await api({action:'config'});if(c.error)throw new Error(c.error);open=c.open||{};if(c.students&&c.students.length)students=c.students;SV('open',open);CFG_ERR=''}catch(e){CFG_ERR=String(e.message||e)}}
@@ -1924,6 +2101,7 @@ subj=function(i){
 };
 
 try{loadPersistedRM()}catch(e){}
+try{if(typeof flushPendingResults==='function'){flushPendingResults();window.addEventListener('online',()=>flushPendingResults())}}catch(e){}
 try{if(typeof hydrateStudentsFromCache==='function')hydrateStudentsFromCache()}catch(e){}
 // Khôi phục path từ 404.html (GitHub Pages SPA)
 try{
