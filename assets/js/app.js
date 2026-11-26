@@ -1,33 +1,33 @@
 const MENU = [
-  { g: "Tổng quan", items: [{ id: "dash", icon: "fa-tachometer-alt", label: "Bảng điều hành đào tạo", roles: ["admin", "teacher", "student"] }] },
+  { g: "Tổng quan", items: [{ id: "dash", icon: "fa-tachometer-alt", label: "Bảng điều hành đào tạo", roles: ["admin", "student"] }] },
   { g: "Sinh viên", items: [
-    { id: "students", icon: "fa-user-graduate", label: "Danh sách sinh viên", roles: ["admin", "teacher"] },
+    { id: "students", icon: "fa-user-graduate", label: "Danh sách sinh viên", roles: ["admin", "student"] },
     { id: "intake", icon: "fa-door-open", label: "Tiếp nhận đợt thực tập", roles: ["admin"] },
-    { id: "profile", icon: "fa-id-card", label: "Hồ sơ sinh viên", roles: ["admin", "teacher", "student"] }
+    { id: "profile", icon: "fa-id-card", label: "Hồ sơ sinh viên", roles: ["admin", "student"] }
   ]},
   { g: "Tổ chức lớp", items: [
     { id: "org", icon: "fa-university", label: "Trường / lớp / đợt", roles: ["admin"] },
-    { id: "rotation", icon: "fa-random", label: "Phân luân phiên", roles: ["admin", "teacher"] },
+    { id: "rotation", icon: "fa-random", label: "Phân luân phiên", roles: ["admin"] },
     { id: "mentors", icon: "fa-user-md", label: "Phân công người hướng dẫn", roles: ["admin"] }
   ]},
   { g: "Lịch & điểm danh", items: [
-    { id: "timetable", icon: "fa-calendar-alt", label: "Thời khóa biểu", roles: ["admin", "teacher", "student"] },
-    { id: "attendance", icon: "fa-clipboard-check", label: "Điểm danh", roles: ["admin", "teacher", "student"] },
-    { id: "leave", icon: "fa-file-medical", label: "Nghỉ phép / vắng có phép", roles: ["admin", "teacher", "student"] }
+    { id: "timetable", icon: "fa-calendar-alt", label: "Thời khóa biểu", roles: ["admin", "student"] },
+    { id: "attendance", icon: "fa-clipboard-check", label: "Điểm danh", roles: ["admin", "student"] },
+    { id: "leave", icon: "fa-file-medical", label: "Nghỉ phép / vắng có phép", roles: ["admin", "student"] }
   ]},
   { g: "Giảng dạy", items: [
-    { id: "theory", icon: "fa-chalkboard-teacher", label: "Bài giảng lý thuyết", roles: ["admin", "teacher", "student"] },
-    { id: "seminar", icon: "fa-comments", label: "Giao ban / seminar", roles: ["admin", "teacher"] },
-    { id: "docs", icon: "fa-book", label: "Tài liệu học tập", roles: ["admin", "teacher", "student"] }
+    { id: "theory", icon: "fa-chalkboard-teacher", label: "Bài giảng lý thuyết", roles: ["admin", "student"] },
+    { id: "seminar", icon: "fa-comments", label: "Giao ban / seminar", roles: ["admin"] },
+    { id: "docs", icon: "fa-book", label: "Tài liệu học tập", roles: ["admin", "student"] }
   ]},
   { g: "Đánh giá", items: [
-    { id: "skills", icon: "fa-check-double", label: "Đánh giá kỹ năng", roles: ["admin", "teacher", "student"] },
-    { id: "logbook", icon: "fa-book-medical", label: "Nhật ký lâm sàng", roles: ["admin", "teacher", "student"] },
-    { id: "finalexam", icon: "fa-file-signature", label: "Kiểm tra cuối đợt", roles: ["admin", "teacher"] },
+    { id: "skills", icon: "fa-check-double", label: "Đánh giá kỹ năng", roles: ["admin", "student"] },
+    { id: "logbook", icon: "fa-book-medical", label: "Nhật ký lâm sàng", roles: ["admin", "student"] },
+    { id: "finalexam", icon: "fa-file-signature", label: "Kiểm tra cuối đợt", roles: ["admin"] },
     { id: "feedback", icon: "fa-comment-dots", label: "Phản hồi của sinh viên", roles: ["admin", "student"] }
   ]},
   { g: "Tổng kết", items: [
-    { id: "grades", icon: "fa-table", label: "Bảng điểm", roles: ["admin", "teacher", "student"] },
+    { id: "grades", icon: "fa-table", label: "Bảng điểm", roles: ["admin", "student"] },
     { id: "export", icon: "fa-print", label: "Xuất biểu mẫu / xác nhận", roles: ["admin"] },
     { id: "stats", icon: "fa-chart-bar", label: "Báo cáo thống kê", roles: ["admin"] }
   ]},
@@ -116,10 +116,10 @@ function esc(s) {
   };
   return String(s ?? "").replace(/[&<>"']/g, (c) => map[c]);
 }
-function schoolOf(id) { return DB.schools.find((x) => x.id === id); }
-function teacherOf(id) { return DB.teachers.find((x) => x.id === id); }
-function groupOf(id) { return DB.groups.find((x) => x.id === id); }
-function batchOf(id) { return DB.batches.find((x) => x.id === id); }
+function schoolOf(id) { return DB.schools.find((x) => x.id === id) || { id, name: "Khoa VLTL – PHCN", short: "VLTL", phone: "", contact: "", until: "", yearCount: DB.students.length }; }
+function teacherOf(id) { return DB.teachers.find((x) => x.id === id) || { id, name: "—", room: "", spec: "" }; }
+function groupOf(id) { return DB.groups.find((x) => x.id === id) || { id, name: id || "—", tech: "", teacher: "", cap: 20 }; }
+function batchOf(id) { return DB.batches.find((x) => x.id === id) || { id, name: id || "—", status: "running", school: "khoa", klass: "", start: "", end: "" }; }
 function initials(name) { return name.split(" ").filter(Boolean).slice(-2).map((p) => p[0]).join("").toUpperCase(); }
 function mask(v, role) { if (role === "admin") return v; return String(v).replace(/.(?=.{3})/g, "•"); }
 function logAct(action) {
@@ -151,24 +151,24 @@ function confirmBox(msg) {
 }
 function visibleStudents() {
   let list = DB.students.slice();
-  if (S.role === "teacher") list = list.filter((s) => s.teacher === "t1");
-  if (S.role === "student") list = list.filter((s) => s.id === "SV1001");
+  if (S.role === "student" && S.obj) list = list.filter((s) => s.t === S.obj);
   if (S.batch !== "all") list = list.filter((s) => s.batch === S.batch);
-  if (S.school !== "all") list = list.filter((s) => s.school === S.school);
+  if (S.school !== "all") list = list.filter((s) => s.t === S.school);
   if (S.status !== "all") list = list.filter((s) => s.status === S.status);
   const q = S.q.trim().toLowerCase();
-  if (q) list = list.filter((s) => (s.name + s.id + (schoolOf(s.school)?.name || "") + s.klass).toLowerCase().includes(q));
-  list.sort((a, b) => S.sort === "score" ? b.score - a.score : a.name.localeCompare(b.name, "vi"));
+  if (q) list = list.filter((s) => (s.name + " " + s.t + " " + (s.room || "") + " " + (s.note || "")).toLowerCase().includes(q));
+  list.sort((a, b) => a.name.localeCompare(b.name, "vi"));
   return list;
 }
 function totalScore(s) {
+  if (!s || s.score == null || !s.skills || !Object.keys(s.skills).length) return "—";
   const w = S.weights;
   const skillAvg = Object.values(s.skills).reduce((a, b) => a + b, 0) / Object.values(s.skills).length;
   const skill10 = (skillAvg / 5) * 10;
   const theory = Math.min(10, s.score);
   const exam = Math.min(10, +(s.score - 0.3).toFixed(1));
-  const attitude = Math.min(10, 6 + s.att / 25);
-  const att = s.att / 10;
+  const attitude = Math.min(10, 6 + (s.att || 0) / 25);
+  const att = (s.att || 0) / 10;
   const sum = att * w.att + attitude * w.attitude + skill10 * w.skill + theory * w.theory + exam * w.exam;
   return +(sum / 100).toFixed(1);
 }
@@ -219,48 +219,31 @@ function widget(icon, cls, num, label) {
 
 function renderDash() {
   const list = visibleStudents();
-  const active = list.filter((s) => s.status === "active").length;
-  const schools = new Set(list.map((s) => s.school)).size;
-  const soonEnd = DB.batches.filter((b) => b.status === "running").length;
-  const att = list.length ? Math.round(list.reduce((a, s) => a + s.att, 0) / list.length) : 0;
-  const incomplete = list.filter((s) => s.logDone < s.logNeed || s.status === "watch").length;
-  const absentToday = list.filter((s) => ["absent", "leave"].includes(DB.attMarks[s.id]?.["T2Sáng"]));
+  const types = DB.types || ["Bác sĩ", "Cử nhân PHCN", "Y sĩ", "Khác"];
+  const count = (t) => list.filter((s) => s.t === t).length;
+  const rooms = new Set(list.map((s) => s.room).filter(Boolean)).size;
   return `
     <div class="widget-row">
-      ${widget("fa-user-graduate", "p", active, "Sinh viên đang thực tập")}
-      ${widget("fa-university", "i", schools, "Trường đang có mặt")}
-      ${widget("fa-hourglass-half", "w", soonEnd, "Đợt đang chạy / sắp kết")}
-      ${widget("fa-percentage", "s", att + "%", "Chuyên cần tuần này")}
-      ${widget("fa-folder-open", "d", incomplete, "Hồ sơ chưa hoàn tất")}
-      ${widget("fa-user-nurse", "p", DB.teachers.length, "Giảng viên đang hướng dẫn")}
+      ${widget("fa-user-graduate", "p", list.length, "Học viên trong danh sách")}
+      ${widget("fa-user-md", "i", count("Bác sĩ"), "Bác sĩ")}
+      ${widget("fa-user-nurse", "s", count("Cử nhân PHCN"), "Cử nhân PHCN")}
+      ${widget("fa-user", "w", count("Y sĩ"), "Y sĩ")}
+      ${widget("fa-user-friends", "d", count("Khác"), "Khác")}
+      ${widget("fa-door-open", "p", rooms, "Phòng đang phân")}
     </div>
+    <p style="color:var(--muted);margin-top:-6px">${esc(DB.source || "")}${S.role === "student" && S.obj ? " · đang xem đối tượng " + esc(S.obj) : ""}</p>
     <div class="filters no-print">
-      <select class="field" id="fBatch">${batchOptions()}</select>
       <select class="field" id="fSchool">${schoolOptions()}</select>
-      <button class="btn sm" id="todayBtn">Hôm nay</button>
     </div>
     <div class="grid-2">
-      <div>
-        <div class="card"><div class="card-h">Sinh viên theo trường</div><div class="card-b"><canvas id="chSchool" height="140"></canvas></div></div>
-        <div class="card"><div class="card-h">Chuyên cần theo tuần</div><div class="card-b"><canvas id="chAtt" height="120"></canvas></div></div>
-      </div>
-      <div>
-        <div class="card"><div class="card-h">Lịch hôm nay</div><div class="card-b"><ul class="timeline">${DB.agenda.map((a) => `<li><div><b>${a.time}</b></div><div class="tl-dot"></div><div><b>${esc(a.title)}</b><div style="color:var(--muted)">${esc(a.place)} · ${esc(a.who)}</div></div></li>`).join("")}</ul></div></div>
-        <div class="card"><div class="card-h">Sinh viên vắng hôm nay</div><div class="card-b">${absentToday.length ? absentToday.slice(0, 6).map((s) => `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span>${esc(s.name)}</span><span class="badge ${ATT[DB.attMarks[s.id]["T2Sáng"]][1]}">${ATT[DB.attMarks[s.id]["T2Sáng"]][0]}</span></div>`).join("") : "<span class='badge b-success'>Không có vắng</span>"}</div></div>
-      </div>
+      <div class="card"><div class="card-h">Số học viên theo đối tượng</div><div class="card-b"><canvas id="chSchool" height="140"></canvas></div></div>
+      <div class="card"><div class="card-h">Theo phòng</div><div class="card-b"><canvas id="chRoom" height="140"></canvas></div></div>
     </div>
-    <div class="grid-2">
-      <div class="card"><div class="card-h">Phân bố theo phòng luân phiên</div><div class="card-b"><canvas id="chRoom" height="140"></canvas></div></div>
-      <div class="card"><div class="card-h">Phân bố điểm tổng kết</div><div class="card-b"><canvas id="chScore" height="140"></canvas></div></div>
-    </div>
-    <div class="card"><div class="card-h">Cần xử lý</div><div class="card-b">
-      ${list.filter((s) => s.logDone < s.logNeed).slice(0, 4).map((s) => `<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;align-items:center"><span>${esc(s.name)} — thiếu logbook (${s.logDone}/${s.logNeed})</span><button class="btn sm" data-open="${s.id}">Xử lý</button></div>`).join("") || "Không có việc tồn."}
-    </div></div>
-    <div class="card"><div class="card-h">Phân luân phiên hiện tại <span class="no-print" style="font-weight:400;text-transform:none">Kéo tên giữa các phòng</span></div><div class="card-b"><div class="rooms" id="roomBoard">${DB.groups.map((g) => roomBox(g, list)).join("")}</div></div></div>
-    <div class="card no-print"><div class="card-h">Chú giải trạng thái</div><div class="card-b legend">
-      ${Object.values(STATUS).map((s) => `<span class="badge ${s[1]}">${s[0]}</span>`).join("")}
-      ${Object.values(ATT).map((s) => `<span class="badge ${s[1]}">${s[0]}</span>`).join("")}
-    </div></div>`;
+    <div class="card"><div class="card-h">Danh sách đang xem</div><div class="card-b table-wrap"><table class="data as-cards"><thead><tr>
+      <th>Họ tên</th><th>Đối tượng</th><th>Năm sinh</th><th>Phòng</th><th>Thời gian</th><th>Ghi chú</th>
+    </tr></thead><tbody>
+    ${list.map((s) => `<tr class="clickable" data-open="${s.id}"><td data-label="Họ tên"><b>${esc(s.name)}</b></td><td data-label="Đối tượng">${esc(s.t)}</td><td data-label="Năm sinh">${S.role === "admin" ? esc(s.dob) : "••••"}</td><td data-label="Phòng">${esc(s.room || "—")}</td><td data-label="Thời gian">${esc(s.from)} – ${esc(s.to)}</td><td data-label="Ghi chú">${esc(s.note || "")}</td></tr>`).join("")}
+    </tbody></table></div></div>`;
 }
 function roomBox(g, list) {
   const t = teacherOf(g.teacher);
@@ -273,7 +256,8 @@ function batchOptions() {
   return `<option value="all">Mọi đợt</option>` + DB.batches.map((b) => `<option value="${b.id}" ${S.batch === b.id ? "selected" : ""}>${esc(b.name)}</option>`).join("");
 }
 function schoolOptions() {
-  return `<option value="all">Mọi trường</option>` + DB.schools.map((s) => `<option value="${s.id}" ${S.school === s.id ? "selected" : ""}>${esc(s.short)}</option>`).join("");
+  const types = DB.types || ["Bác sĩ", "Cử nhân PHCN", "Y sĩ", "Khác"];
+  return `<option value="all">Mọi đối tượng</option>` + types.map((t) => `<option value="${esc(t)}" ${S.school === t ? "selected" : ""}>${esc(t)}</option>`).join("");
 }
 
 function renderStudents() {
@@ -296,20 +280,18 @@ function renderStudents() {
       <button class="btn sm danger" id="delSel">Xóa đã chọn</button>
     </div>
     <div class="table-wrap"><table class="data as-cards"><thead><tr>
-      <th></th><th>Mã SV</th><th>Họ tên</th><th>Ngày sinh</th><th>Trường / lớp</th><th>Đợt</th><th>Tổ</th><th>Người HD</th><th>Chuyên cần</th><th>Điểm</th><th>Trạng thái</th>
+      <th></th><th>Họ tên</th><th>Đối tượng</th><th>Năm sinh</th><th>Phòng</th><th>Từ ngày</th><th>Đến ngày</th><th>SĐT</th><th>Ghi chú</th>
     </tr></thead><tbody>
     ${rows.map((s) => `<tr class="clickable" data-open="${s.id}">
       <td data-label=""><input type="checkbox" class="pick" data-id="${s.id}" ${S.selected.has(s.id) ? "checked" : ""}></td>
-      <td data-label="Mã">${esc(s.id)}</td>
       <td data-label="Họ tên"><b>${esc(s.name)}</b></td>
-      <td data-label="Ngày sinh">${S.role === "student" ? "••/••/••••" : esc(s.dob)}</td>
-      <td data-label="Trường">${esc(schoolOf(s.school).short)} · ${esc(s.klass)}</td>
-      <td data-label="Đợt">${esc(batchOf(s.batch).name)}</td>
-      <td data-label="Tổ">${esc(groupOf(s.group).name)}</td>
-      <td data-label="HD">${esc(teacherOf(s.teacher).name)}</td>
-      <td data-label="Chuyên cần">${s.att}%</td>
-      <td data-label="Điểm"><b>${totalScore(s)}</b></td>
-      <td data-label="TT"><span class="badge ${STATUS[s.status][1]}">${STATUS[s.status][0]}</span></td>
+      <td data-label="Đối tượng">${esc(s.t)}</td>
+      <td data-label="Năm sinh">${S.role === "admin" ? esc(s.dob) : "••••"}</td>
+      <td data-label="Phòng">${esc(s.room || "—")}</td>
+      <td data-label="Từ ngày">${esc(s.from || "")}</td>
+      <td data-label="Đến ngày">${esc(s.to || "")}</td>
+      <td data-label="SĐT">${S.role === "admin" ? esc(s.phone || "") : esc(mask(s.phone || "", "student"))}</td>
+      <td data-label="Ghi chú">${esc(s.note || "")}</td>
     </tr>`).join("")}
     </tbody></table></div>
     <div class="filters" style="margin-top:10px">
@@ -326,7 +308,7 @@ function renderProfile(id) {
   S.openId = s.id;
   const tabs = [["info", "Thông tin"], ["rot", "Luân phiên"], ["att", "Điểm danh"], ["skill", "Đánh giá"], ["log", "Logbook"], ["score", "Điểm"], ["note", "Ghi chú"]];
   let body = "";
-  if (S.tab === "info") body = `<p><b>${esc(s.name)}</b> · ${esc(s.id)}</p><p>Trường: ${esc(schoolOf(s.school).name)}</p><p>Lớp: ${esc(s.klass)} · Đợt: ${esc(batchOf(s.batch).name)}</p><p>Ngày sinh: ${S.role === "admin" ? esc(s.dob) : "ẩn một phần"}</p><p>SĐT: ${esc(mask(s.phone, S.role))} · CCCD: ${esc(mask(s.cccd, S.role))}</p>`;
+  if (S.tab === "info") body = `<p><b>${esc(s.name)}</b> · ${esc(s.t)}</p><p>Phòng: ${esc(s.room || "—")}</p><p>Thời gian: ${esc(s.from)} – ${esc(s.to)}</p><p>Năm sinh: ${S.role === "admin" ? esc(s.dob) : "ẩn với sinh viên"}</p><p>SĐT: ${S.role === "admin" ? esc(s.phone || "—") : esc(mask(s.phone || "", "student"))}</p><p>Ghi chú: ${esc(s.note || "—")}</p>`;
   if (S.tab === "rot") body = `<p>Hiện tại: <b>${esc(groupOf(s.group).name)}</b> — ${esc(groupOf(s.group).tech)}</p><p>Người hướng dẫn: ${esc(teacherOf(s.teacher).name)}</p>`;
   if (S.tab === "att") body = `<p>Tỷ lệ chuyên cần: <b>${s.att}%</b></p>` + Object.entries(DB.attMarks[s.id]).map(([k, v]) => `<span class="badge ${ATT[v][1]}" style="margin:2px">${k}: ${ATT[v][0]}</span>`).join(" ");
   if (S.tab === "skill") body = Object.entries(s.skills).map(([k, v]) => `<div style="margin-bottom:6px">${esc(k)} <div class="progress"><i style="width:${v * 20}%"></i></div></div>`).join("");
@@ -409,7 +391,7 @@ function renderPage() {
     case "seminar": return `<div class="card"><div class="card-b"><p><b>Thứ Tư 09:30</b> — Seminar vận động trị liệu, hội trường nhỏ.</p><p><b>Thứ Sáu 15:00</b> — Báo cáo ca lâm sàng đau vai gáy.</p></div></div>`;
     case "docs": return `<div class="card"><div class="card-b"><p>Nội quy thực tập, checklist QTKT, bài giảng PDF nằm trên Drive của khoa (bản thật).</p><p>Bản demo không gắn file bệnh nhân.</p><button class="btn" onclick="window.print()">In trang này</button></div></div>`;
     case "skills": return `<div class="grid-2"><div class="card"><div class="card-h">Radar năng lực (SV mẫu)</div><div class="card-b"><canvas id="radar" height="220"></canvas></div></div><div>${renderProfile(list[0]?.id)}</div></div>`;
-    case "logbook": return `<div class="card"><div class="card-h">Logbook</div><div class="card-b">${list.slice(0, 10).map((s) => `<div style="margin-bottom:10px"><b>${esc(s.name)}</b> ${s.logDone}/${s.logNeed}<div class="progress"><i style="width:${Math.round(s.logDone / s.logNeed * 100)}%;background:${s.logDone >= s.logNeed ? "var(--success)" : "var(--warning)"}"></i></div></div>`).join("")}</div></div>`;
+    case "logbook": return `<div class="card"><div class="card-h">Nhật ký lâm sàng</div><div class="card-b"><p>Chưa có số ca logbook trên danh sách thật tháng 11/2026. Danh sách học viên lấy từ sheet khoa, không dùng số liệu giả.</p></div></div>`;
     case "finalexam": return `<div class="card"><div class="card-b"><p>Lý thuyết: trắc nghiệm trên bộ đề của từng đối tượng. Thực hành: bảng kiểm QTKT.</p><p>Điểm demo lấy từ dữ liệu mẫu, chưa nối Google Apps Script.</p></div></div>`;
     case "feedback": return `<div class="card"><div class="card-b"><textarea class="field" id="fb" rows="4" placeholder="Góp ý về buổi thực hành..."></textarea><div style="margin-top:8px"><button class="btn" id="sendFb">Gửi phản hồi</button></div></div></div>`;
     case "grades": return renderGrades();
@@ -438,19 +420,17 @@ function drawCharts() {
   if (typeof Chart === "undefined") return;
   killCharts();
   const list = visibleStudents();
-  const bySchool = DB.schools.map((sc) => list.filter((s) => s.school === sc.id).length);
+  const types = DB.types || ["Bác sĩ", "Cử nhân PHCN", "Y sĩ", "Khác"];
+  const byType = types.map((t) => list.filter((s) => s.t === t).length);
   const make = (id, cfg) => {
     const el = document.getElementById(id);
     if (!el) return;
     S.charts.push(new Chart(el, cfg));
   };
-  make("chSchool", { type: "bar", data: { labels: DB.schools.map((s) => s.short), datasets: [{ data: bySchool, backgroundColor: "#3f6ad8" }] }, options: { plugins: { legend: { display: false } } } });
-  make("chAtt", { type: "line", data: { labels: ["T1", "T2", "T3", "T4"], datasets: [{ data: [88, 91, 86, list.length ? Math.round(list.reduce((a, s) => a + s.att, 0) / list.length) : 0], borderColor: "#3ac47d", tension: 0.3 }] }, options: { plugins: { legend: { display: false } } } });
-  make("chRoom", { type: "bar", data: { labels: DB.groups.map((g) => g.name), datasets: [{ label: "SV", data: DB.groups.map((g) => list.filter((s) => s.group === g.id).length), backgroundColor: "#16aaff" }] }, options: { plugins: { legend: { display: false } } } });
-  const bins = [0, 0, 0, 0];
-  list.forEach((s) => { const t = totalScore(s); bins[t < 5 ? 0 : t < 7 ? 1 : t < 8.5 ? 2 : 3]++; });
-  make("chScore", { type: "bar", data: { labels: ["<5", "5–7", "7–8.5", "≥8.5"], datasets: [{ data: bins, backgroundColor: ["#d92550", "#f7b924", "#16aaff", "#3ac47d"] }] }, options: { plugins: { legend: { display: false } } } });
-  const sample = list[0];
+  make("chSchool", { type: "bar", data: { labels: types, datasets: [{ data: byType, backgroundColor: ["#3f6ad8", "#3ac47d", "#f7b924", "#6c757d"] }] }, options: { plugins: { legend: { display: false } } } });
+  const roomLabels = [...new Set(list.map((s) => s.room).filter(Boolean))];
+  make("chRoom", { type: "bar", data: { labels: roomLabels.map((r) => "P." + r), datasets: [{ label: "HV", data: roomLabels.map((r) => list.filter((s) => s.room === r).length), backgroundColor: "#16aaff" }] }, options: { plugins: { legend: { display: false } } } });
+  const sample = list.find((s) => s.skills && Object.keys(s.skills).length);
   if (sample && document.getElementById("radar")) {
     make("radar", { type: "radar", data: { labels: Object.keys(sample.skills), datasets: [{ label: sample.name, data: Object.values(sample.skills), backgroundColor: "rgba(63,106,216,.2)", borderColor: "#3f6ad8" }] }, options: { scales: { r: { suggestedMin: 0, suggestedMax: 5 } } } });
   }
@@ -564,50 +544,61 @@ function bindPage() {
   if (today) today.onclick = () => { S.batch = "all"; toast("Đang xem số liệu tuần hiện tại"); layout(); };
 }
 
-function enter(role) {
-  const map = {
-    admin: { name: "BS.CKI Trần Cồng Hùng", roleLabel: "Quản trị viên" },
-    teacher: { name: "CN. Nguyễn Bình", roleLabel: "Giảng viên" },
-    student: { name: "Nguyễn Văn An", roleLabel: "Sinh viên" }
-  };
+function enter(role, obj) {
   S.role = role;
-  S.user = { ...map[role], role };
-  localStorage.setItem("vltl_role", role);
+  S.obj = obj || null;
+  S.user = role === "admin"
+    ? { name: "Quản trị viên", roleLabel: "Quản trị viên", role }
+    : { name: "Sinh viên", roleLabel: "Sinh viên · " + (obj || ""), role };
   document.getElementById("login").style.display = "none";
   document.getElementById("shell").style.display = "flex";
-  logAct("Đăng nhập vai trò " + map[role].roleLabel);
+  logAct("Đăng nhập " + S.user.roleLabel);
   go("dash");
 }
 
 function bootLogin() {
+  const types = (DB.types || ["Bác sĩ", "Cử nhân PHCN", "Y sĩ", "Khác"]).map((t) =>
+    `<button type="button" class="btn" data-type="${esc(t)}" style="width:100%;margin-top:8px;background:#fff;color:#3f6ad8;border:1px solid #3f6ad8">${esc(t)}</button>`
+  ).join("");
   document.getElementById("login").innerHTML = `<div class="login-wrap"><div class="login-card">
     <div class="login-side">
-      <img src="logo.png" alt="" width="56" height="56" onerror="this.style.display='none'">
-      <h2 style="margin:12px 0 4px">Khoa VLTL – PHCN</h2>
-      <p>Bệnh viện Y học cổ truyền TP. Hồ Chí Minh<br>Quản lý đào tạo lâm sàng</p>
-      <p style="color:#6c757d">Chọn vai trò để xem đúng menu. Mật khẩu demo: <b>1111</b></p>
+      <img src="logo.png" alt="Logo bệnh viện" width="64" height="64" onerror="this.style.display='none'">
+      <h2 style="margin:14px 0 4px;font-size:1.15rem">Bệnh viện Y học cổ truyền TP. Hồ Chí Minh</h2>
+      <p style="margin:0;font-weight:700">Khoa VLTL – PHCN</p>
     </div>
-    <form class="login-form" id="loginForm">
+    <div class="login-form">
       <h3 style="margin-top:0">Đăng nhập</h3>
       <div class="role-pick">
-        <button type="button" data-role="admin" class="on">Quản trị viên — BS.CKI Trần Cồng Hùng</button>
-        <button type="button" data-role="teacher">Giảng viên lâm sàng</button>
-        <button type="button" data-role="student">Sinh viên thực tập</button>
+        <button type="button" id="pickAdmin" class="on">Quản trị viên</button>
+        <button type="button" id="pickStudent">Sinh viên</button>
       </div>
-      <label style="display:block;margin-top:14px">Mật khẩu<input class="field" id="pw" type="password" placeholder="••••"></label>
-      <button class="btn" style="margin-top:12px;width:100%" type="submit">Vào hệ thống</button>
-    </form></div></div>`;
-  let role = "admin";
-  document.querySelectorAll("[data-role]").forEach((b) => b.onclick = () => {
-    role = b.dataset.role;
-    document.querySelectorAll("[data-role]").forEach((x) => x.classList.remove("on"));
-    b.classList.add("on");
-  });
-  document.getElementById("loginForm").onsubmit = (e) => {
-    e.preventDefault();
-    if (document.getElementById("pw").value !== "1111") return toast("Sai mật khẩu demo (1111)", "bad");
-    enter(role);
+      <form id="loginForm">
+        <label style="display:block;margin-top:14px">Mật khẩu<input class="field" id="pw" type="password" placeholder="Mật khẩu quản trị"></label>
+        <button class="btn" style="margin-top:12px;width:100%" type="submit">Vào hệ thống</button>
+      </form>
+      <div id="stuBox" style="display:none">
+        <p style="margin:14px 0 4px">Chọn đối tượng — không cần mật khẩu</p>
+        ${types}
+      </div>
+    </div></div></div>`;
+  const form = document.getElementById("loginForm");
+  const stu = document.getElementById("stuBox");
+  document.getElementById("pickAdmin").onclick = () => {
+    form.style.display = "block"; stu.style.display = "none";
+    document.getElementById("pickAdmin").classList.add("on");
+    document.getElementById("pickStudent").classList.remove("on");
   };
+  document.getElementById("pickStudent").onclick = () => {
+    form.style.display = "none"; stu.style.display = "block";
+    document.getElementById("pickStudent").classList.add("on");
+    document.getElementById("pickAdmin").classList.remove("on");
+  };
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    if (document.getElementById("pw").value !== "1111") return toast("Sai mật khẩu quản trị", "bad");
+    enter("admin");
+  };
+  stu.querySelectorAll("[data-type]").forEach((b) => b.onclick = () => enter("student", b.dataset.type));
 }
 
 function init() {
