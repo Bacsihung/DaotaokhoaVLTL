@@ -14,8 +14,9 @@ try{ADM=sessionStorage.getItem('vltl_adm')||''}catch(e){}
 const ICON={home:'fa-home',rules:'fa-book',rooms:'fa-th-large',user:'fa-user-md',admin:'fa-lock',file:'fa-file-alt',chart:'fa-chart-pie'};
 
 /* ===== API (giữ nguyên giao thức Apps Script) ===== */
-async function api(p,body){const u=API+'?'+new URLSearchParams({token:TOKEN,origin:location.origin,_t:Date.now(),...p});
- const r=await fetch(u,{cache:'no-store',...(body?{method:'POST',body:JSON.stringify(body)}:{})});return r.json()}
+async function api(p,body){const c=new AbortController(),t=setTimeout(()=>c.abort(),20000);
+ try{const u=API+'?'+new URLSearchParams({token:TOKEN,origin:location.origin,_t:Date.now(),...p});
+  const r=await fetch(u,{cache:'no-store',signal:c.signal,...(body?{method:'POST',body:JSON.stringify(body)}:{})});return await r.json()}finally{clearTimeout(t)}}
 async function pull(){if(!OK)return;
  const [c,t]=await Promise.allSettled([api({action:'config'}),api({action:'tree'})]);
  if(c.status==='fulfilled'&&!c.value.error){const v=c.value;open=v.open||{};if(v.students?.length)students=v.students;ROOMS2=v.rooms2||null;SV('open',open);ERR=''}
@@ -132,7 +133,7 @@ R.rev=i=>{head('fa-question-circle','Bộ câu hỏi ôn tập',SUBJ[i]);
 
 /* ===== Thi ===== */
 const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-R.exam=async(i,li)=>{const l=LB[i][li];if(OK){await pull();if(ERR)return toast('Không kết nối được máy chủ: '+ERR,1)}
+R.exam=async(i,li)=>{const l=LB[i][li];if(OK){view.innerHTML=skeleton();await pull();if(ERR)return toast('Không kết nối được máy chủ: '+ERR,1)}
  const o=open[SUBJ[i]+'|'+l];if(!o||!o.on){toast('Mục thi này chưa được mở.',1);return location.hash='#/doituong/'+i}
  const keep=S.draft||{};S={si:i,li,l,t:SUBJ[i],set:o.set};head('fa-pen','Thi kết thúc thực hành',SUBJ[i]+(i===1?' · '+l:''));
  view.innerHTML=crumb()+`<div class="card" style="max-width:520px;margin:0 auto"><div class="card-header">Thông tin thí sinh</div><div class="card-body"><label for="nm">Họ và tên</label><input class="form-control mb-3" id="nm" placeholder="Nguyễn Văn A" value="${esc(keep.n||'')}"><label for="db">Ngày sinh</label><input class="form-control mb-3" id="db" placeholder="dd/mm/yyyy" value="${esc(keep.d||'')}"><button class="btn btn-primary btn-block" id="go">Tiếp tục</button></div></div>`;
@@ -183,15 +184,16 @@ R.admin=async()=>{if(!ADM&&!(await login()))return location.hash='#/';
  if(window.Chart)new Chart($('#ch'),{type:'bar',data:{labels:SUBJ.slice(0,3),datasets:[{data:g,backgroundColor:['#3f6ad8','#3ac47d','#f7b924'],borderRadius:4}]},options:{plugins:{legend:{display:false}},scales:{y:{min:0,max:10}}}})};
 
 /* ===== Router (hash) — #/doituong/1, #/thi/1/0 … ===== */
+function showErr(e){console.error(e);view.innerHTML=`<div class="alert alert-danger"><b>Lỗi hiển thị:</b> ${esc(e&&e.message||e)}<br><small>Nhấn Ctrl+F5 để tải lại. Nếu vẫn lỗi, chụp dòng này gửi người phát triển.</small></div>`}
 function route(){const h=location.hash.replace(/^#\/?/,''),[path,qs]=h.split('?'),[p,a,b]=path.split('/'),n=v=>v===undefined?0:+v;
  const m={'':()=>R.home(),noiquy:()=>R.rules(),phanphong:()=>R.rooms(),doituong:()=>R.subj(n(a)),kythuat:()=>R.tech(n(a),0,qs&&decodeURIComponent(qs.replace(/^q=/,''))),bangkiem:()=>R.bk(n(a)),ontap:()=>R.rev(n(a)),thi:()=>R.exam(n(a),n(b)),quantri:()=>R.admin()};
  clearInterval(S.tm);document.body.classList.remove('open');window.scrollTo(0,0);
  $$('#menu a').forEach(x=>x.classList.toggle('on',x.dataset.h==='#/'+(p==='doituong'?'doituong/'+a:p)));
- (m[p]||m[''])();view.focus({preventScroll:true})}
+ try{Promise.resolve((m[p]||m[''])()).catch(showErr)}catch(e){showErr(e)}view.focus({preventScroll:true})}
 addEventListener('hashchange',route);
 
 /* ===== Khởi động: skeleton → tải dữ liệu → hiển thị ===== */
-view.innerHTML=skeleton();
-pull().catch(()=>{}).finally(()=>{route();flush();$('#bellDot').hidden=!pendingCount()});
+route();
+pull().catch(()=>{}).finally(()=>{if(!S.tm&&!/^#\/(thi|quantri)/.test(location.hash))route();flush();$('#bellDot').hidden=!pendingCount()});
 setInterval(()=>{if(document.visibilityState==='visible'&&OK&&!S.tm&&/^#\/(doituong|phanphong)/.test(location.hash))pull().then(route)},30000);
 })();
