@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/perfect-scrollbar/1.5.5/css/perfect-scrollbar.min.css">
-<link rel="stylesheet" href="assets/css/theme.css">
+<link rel="stylesheet" href="assets/css/theme.css?v=3">
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('vltl_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}</script>
 </head>
 <body>
@@ -50,11 +50,17 @@
 
 <div id="toasts" class="toasts" aria-live="polite"></div>
 
+<script>
+/* Báo lỗi tải script / lỗi JS ngay trên trang để dễ chẩn đoán */
+addEventListener('error',function(e){var t=e.target&&e.target.src,m=t?('Không tải được: '+t):(e.message+' ('+(e.filename||'').split('/').pop()+':'+e.lineno+')');
+ var b=document.getElementById('errbar')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'errbar'}));
+ b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:999;background:#d92550;color:#fff;padding:8px 14px;font:13px system-ui';b.innerHTML+='<div>⚠ '+m.replace(/</g,'&lt;')+'</div>'},true);
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/perfect-scrollbar/1.5.5/perfect-scrollbar.min.js"></script>
 <!-- data.js: dữ liệu cũ (TECH, QS, KEYS, SUBJ, SCH…) cắt từ index.html cũ + dòng window.VLTL={...} -->
-<script src="assets/js/data.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="assets/js/data.js?v=3"></script>
+<script src="assets/js/app.js?v=3"></script>
 </body>
 </html>
