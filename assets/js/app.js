@@ -340,7 +340,7 @@ function spinSlots(i){const n=WHEEL_N[i]||3,pool=wheelPool(i),name=$('#wn').valu
     const w=LS('wheel_log',[]);w.push(rec);SV('wheel_log',w);audit('Quay bảng kiểm QTKT ('+SUBJ[i]+'): '+items.map(x=>x.num).join(', '),name);if(OK)api({action:'saveWheel'},{n:name,d,t:SUBJ[i],items:items.map(x=>x.num+'. '+x.name)}).catch(()=>{});
     $('#wres').innerHTML=`<div class="alert alert-success">Kết quả quay cho <b>${esc(name)}</b>: bảng kiểm số <b>${items.map(x=>x.num).join(', ')}</b></div>${wItems(items)}`;bindDrive($('#wres'));toast('Đã lưu kết quả quay')}},1500+k*1100))};
  old?ask({title:'Học viên đã quay trước đó',msg:'Đã có kết quả quay của học viên này. Quay lại sẽ thêm kết quả mới. Tiếp tục?',ok:'Quay lại'}).then(y=>y&&go()):go()}
-/* ===== Xin nghỉ phép ===== */
+/* ===== Xin nghỉ phép (theo mẫu "SV DON XIN NGHI PHEP.docx" trong mục Nội quy) ===== */
 const pad2=n=>String(n).padStart(2,'0'),
  fmtD=d=>pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear(),
  isoD=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null},
@@ -350,14 +350,31 @@ const pad2=n=>String(n).padStart(2,'0'),
 function leaveDays(a,b){const s=isoD(a),e=isoD(b||a);if(!s||!e||e<s)return null;
  const o=[];for(const d=new Date(s);d<=e&&o.length<15;d.setDate(d.getDate()+1))o.push(fmtD(d));return o.length>14?null:o}
 
-/* Câu đơn theo đúng mẫu của Khoa */
-function leaveText(f){const t=fmtD(new Date()),dy=f.days,
- when=dy.length===1?(dy[0]===t?'hôm nay ngày '+t:'ngày '+dy[0]):'từ ngày '+dy[0]+' đến ngày '+dy[dy.length-1],
- why=String(f.reason||'').trim().replace(/[.\s]+$/,'');
- return `Em là học viên ${f.n}, đang thực hành ở phòng ${f.room}, em xin phép bác Trưởng Khoa và chị Hương được nghỉ ${when}. Lý do: ${why}. Em sẽ đi trực bù theo sự phân công và sắp xếp của khoa theo quy định. Em xin chân thành cảm ơn.`}
+const LV_ROLES=[['bác sĩ','Bác sĩ'],['kỹ thuật viên','Cử nhân PHCN'],['y sĩ','Y sĩ']];
 
-/* File đơn (HTML → .doc khi tải; Apps Script chuyển thêm PDF khi lưu Drive) */
-const leaveDoc=f=>`<html><head><meta charset="utf-8"><title>Đơn xin nghỉ phép</title><style>body{font-family:'Times New Roman';font-size:13pt;line-height:1.5}.c{text-align:center}</style></head><body><p class="c"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br>Độc lập - Tự do - Hạnh phúc</p><h2 class="c">ĐƠN XIN NGHỈ PHÉP</h2><p><b>Kính gửi:</b> Trưởng Khoa VLTL – PHCN, Bệnh viện Y học cổ truyền TP. Hồ Chí Minh</p><p>Họ tên: <b>${esc(f.n)}</b> – Ngày sinh: ${esc(f.d)}<br>Đối tượng: ${esc(f.t)} – Phòng: ${esc(f.room)}</p><p style="text-align:justify">${esc(leaveText(f))}</p><p style="text-align:right">TP. Hồ Chí Minh, ngày ${fmtD(new Date())}<br><b>Học viên</b><br><br><br>${esc(f.n)}</p></body></html>`;
+/* Nội dung đơn: giữ đúng bố cục mẫu của Phòng ĐT-NCKH-CĐT */
+function leaveBody(f){const st=f.st||{},now=new Date(),dy=f.days,
+ yr=(String(f.d).match(/(19|20)\d{2}/)||[''])[0]||f.d,
+ when=dy.length===1?'ngày '+dy[0]:'từ ngày '+dy[0]+' đến ngày '+dy[dy.length-1]+' ('+dy.length+' ngày)',
+ prac=(st.from||st.to)?'từ ngày '+(st.from||'………………')+' đến ngày '+(st.to||'………………'):'từ ngày ………………… đến ngày …………………',
+ why=String(f.reason||'').trim().replace(/[.\s]+$/,''),
+ roles=LV_ROLES.map(r=>r[1]===f.t?`<b style="border:1px solid #000;padding:0 5px">${r[0]}</b>`:r[0]).join(', '),
+ back=f.back?esc(f.back):'……………………',mk=f.makeup?esc(f.makeup):'……………………';
+ return `<p style="text-align:center;margin:0"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b></p><p style="text-align:center;margin:0"><b>Độc lập – Tự do – Hạnh phúc</b></p><h2 style="text-align:center;margin:14px 0">ĐƠN XIN NGHỈ PHÉP</h2>
+<p><b>Kính gửi:</b> - Phòng ĐT-NCKH-CĐT<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Khoa: Vật lý trị liệu – Phục hồi chức năng</p>
+<p>Tôi tên là: <b>${esc(f.n)}</b> &nbsp;&nbsp; Sinh năm: <b>${esc(yr)}</b></p>
+<p>Đối tượng: ${roles}</p>
+<p>Hiện đang thực hành tại Khoa: <b>VLTL – PHCN</b> &nbsp;&nbsp; Phòng: <b>${esc(f.room)}</b></p>
+<p>Thời gian thực tập tại khoa ${esc(prac)}</p>
+<p>Nay làm đơn này xin phép nghỉ <b>${esc(when)}</b>.</p>
+<p>Lý do: ${esc(why)}.</p>
+<p style="text-align:justify">Tôi cam kết sẽ trở lại thực hành vào ngày ${back}, thực hành bù vào ngày ${mk} theo sự phân công và sắp xếp của Khoa theo quy định và chấp hành nghiêm chỉnh nội quy bệnh viện.</p>
+<p style="text-align:justify">Kính mong lãnh đạo Khoa VLTL – PHCN xem xét, chấp thuận và nhận xét cho tôi thời gian thực hành tại khoa trong thời gian tôi đi thực hành tại khoa.</p>
+<p>Kính mong Phòng ĐT-NCKH-CĐT xem xét và chấp thuận.</p>
+<p>Tôi xin chân thành cảm ơn!</p>
+<table width="100%" style="border-collapse:collapse;margin-top:10px"><tr><td align="center" width="33%" valign="top"><b>Ý kiến Phòng ĐT-NCKH-CĐT</b></td><td align="center" width="33%" valign="top"><b>Ý kiến Lãnh đạo khoa</b></td><td align="center" width="34%" valign="top">TP.HCM, ngày ${pad2(now.getDate())} tháng ${pad2(now.getMonth()+1)} năm ${now.getFullYear()}<br><b>Người làm đơn</b><br><br><br><br>${esc(f.n)}</td></tr></table>`}
+
+const leaveDoc=f=>`<html><head><meta charset="utf-8"><title>Đơn xin nghỉ phép</title><style>body{font-family:'Times New Roman';font-size:13pt;line-height:1.5}p{margin:6pt 0}</style></head><body>${leaveBody(f)}</body></html>`;
 
 function findStuLeave(n,d){const a=students.find(s=>norm(s.n)===norm(n)&&norm(s.d)===norm(d));if(a)return a;
  const L=students.filter(s=>nz(s.n)===nz(n));return L.length===1?L[0]:null}
@@ -374,16 +391,18 @@ R.leave=(i,keep)=>{keep=keep||{};head('fa-file-signature','Xin nghỉ phép',SUB
  <div class="row"><div class="col-sm-6"><label for="lf">Ngày xin nghỉ</label><input type="date" class="form-control mb-3" id="lf" value="${esc(keep.from||isoToday())}"></div>
  <div class="col-sm-6"><label for="lt">Đến ngày <small class="text-muted">(nếu nghỉ nhiều ngày)</small></label><input type="date" class="form-control mb-3" id="lt" value="${esc(keep.to||'')}"></div></div>
  <label for="ly">Lý do</label><textarea class="form-control mb-3" id="ly" rows="3" maxlength="300" placeholder="Ví dụ: sốt, đau họng, có giấy hẹn khám…">${esc(keep.reason||'')}</textarea>
+ <div class="row"><div class="col-sm-6"><label for="lb">Ngày trở lại thực hành <small class="text-muted">(không bắt buộc)</small></label><input class="form-control mb-3" id="lb" maxlength="30" placeholder="dd/mm/yyyy" value="${esc(keep.back||'')}"></div>
+ <div class="col-sm-6"><label for="lm">Ngày thực hành bù <small class="text-muted">(không bắt buộc)</small></label><input class="form-control mb-3" id="lm" maxlength="60" placeholder="dd/mm/yyyy" value="${esc(keep.makeup||'')}"></div></div>
  <button class="btn btn-primary btn-block" id="lgo">Tạo đơn</button></div></div>`;
- $('#lgo').onclick=()=>{const n=$('#ln').value.trim().replace(/\s+/g,' '),d=$('#ld').value.trim(),room=$('#lr').value,from=$('#lf').value,to=$('#lt').value,reason=$('#ly').value.trim();
+ $('#lgo').onclick=()=>{const n=$('#ln').value.trim().replace(/\s+/g,' '),d=$('#ld').value.trim(),room=$('#lr').value,from=$('#lf').value,to=$('#lt').value,reason=$('#ly').value.trim(),back=$('#lb').value.trim(),makeup=$('#lm').value.trim();
   if(!n||!d||!room||!from||!reason)return toast('Vui lòng nhập đủ họ tên, ngày sinh, phòng, ngày nghỉ và lý do.',1);
   const days=leaveDays(from,to);if(!days)return toast('Khoảng ngày nghỉ không hợp lệ (tối đa 14 ngày, “đến ngày” phải sau “ngày nghỉ”).',1);
   const st=findStuLeave(n,d);
-  leavePreview(i,{n,d,room,from,to,reason,days,t:SUBJ[i],st,key:st?skey(st):n+'|'+d})}};
+  leavePreview(i,{n,d,room,from,to,reason,back,makeup,days,t:SUBJ[i],st,key:st?skey(st):n+'|'+d})}};
 
 function leavePreview(i,f){head('fa-file-signature','Xin nghỉ phép',SUBJ[i]);
- view.innerHTML=crumb()+`<div class="card" style="max-width:680px;margin:0 auto"><div class="card-header">Xem lại đơn trước khi gửi</div><div class="card-body">
- <div class="p-3 mb-3" style="border:1px solid var(--bd);border-radius:8px;line-height:1.7;text-align:justify">${esc(leaveText(f))}</div>
+ view.innerHTML=crumb()+`<div class="card" style="max-width:760px;margin:0 auto"><div class="card-header">Xem lại đơn trước khi gửi</div><div class="card-body">
+ <div class="mb-3" style="background:#fff;color:#000;padding:24px 28px;border:1px solid var(--bd);border-radius:8px;font-family:'Times New Roman',serif;font-size:15px;line-height:1.7;overflow-x:auto">${leaveBody(f)}</div>
  ${f.st?'':'<div class="alert alert-warning">Không tìm thấy bạn trong danh sách học viên (đối chiếu theo họ tên + ngày sinh). Đơn vẫn được lưu vào Drive nhưng ngày nghỉ có thể chưa hiện trong bảng của Quản trị viên.</div>'}
  <div class="d-flex flex-wrap" style="gap:8px"><button class="btn btn-primary" id="lsend"><i class="fas fa-cloud-upload-alt"></i> Gửi đơn &amp; lưu vào Drive</button><button class="btn btn-soft" id="ldl"><i class="fas fa-download"></i> Tải file (.doc)</button><button class="btn btn-soft ml-auto" id="led">← Sửa lại</button></div>
  <p id="lst" class="text-muted mt-3 mb-0"></p></div></div>`;
