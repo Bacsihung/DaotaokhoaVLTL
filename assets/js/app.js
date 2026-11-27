@@ -95,9 +95,9 @@ R.rules=()=>{head('fa-book','Nội quy','Nội quy và đơn xin nghỉ phép c�
 
 /* ===== Trang đối tượng ===== */
 R.subj=i=>{const s=SUBJ[i];head('fa-user-md',s,'Danh mục kỹ thuật, bảng kiểm, ôn tập và thi');
- const W=(h,ic,cls,n,l)=>`<div class="col-md-4"><a class="card widget link" href="${h}" style="text-decoration:none"><div class="wi ${cls}"><i class="fas ${ic}"></i></div><div><div class="wn">${n}</div><div class="wl">${l}</div></div></a></div>`;
+ const W=(h,ic,cls,n,l)=>`<div class="col-md-6 col-xl-3"><a class="card widget link" href="${h}" style="text-decoration:none"><div class="wi ${cls}"><i class="fas ${ic}"></i></div><div><div class="wn">${n}</div><div class="wl">${l}</div></div></a></div>`;
  const ex=(LB[i]||[]).map((l,li)=>{const o=open[s+'|'+l],ok=o&&o.on;return `<div class="col-md-6"><div class="card ${ok?'link':''}" style="${ok?'':'opacity:.7'}" ${ok?`data-ex="${li}"`:''}><div class="card-body d-flex align-items-center" style="gap:12px"><div class="wi ${ok?'s-ok':'s-no'}"><i class="fas ${ok?'fa-pen':'fa-lock'}"></i></div><div><b>${esc(l)}</b><div class="text-muted">${ok?'Đã mở – Đề số '+o.set+' – nhấn để vào thi':ERR?'Lỗi kết nối máy chủ (F5 để thử lại)':'Chờ Quản trị viên mở'}</div></div></div></div></div>`}).join('')||'<div class="col-12"><div class="card"><div class="card-body text-muted">Chưa có bộ đề cho nhóm này.</div></div></div>';
- view.innerHTML=crumb()+`<div class="row">${W('#/kythuat/'+i,'fa-list','s-pr',TECH[i].length,'Kỹ thuật trong danh mục')}${W('#/bangkiem/'+i,'fa-clipboard-check','s-ok',bkFiles(i).length||8,'Bảng kiểm quy trình')}${W('#/ontap/'+i,'fa-question-circle','s-wa',KEYS[i].length*5,'Câu hỏi ôn tập')}</div><h6 class="text-muted mb-3">THI KẾT THÚC THỰC HÀNH</h6><div class="row">${ex}</div>`;
+ view.innerHTML=crumb()+`<div class="row">${W('#/kythuat/'+i,'fa-list','s-pr',TECH[i].length,'Kỹ thuật trong danh mục')}${W('#/bangkiem/'+i,'fa-clipboard-check','s-ok',bkFiles(i).length||8,'Bảng kiểm quy trình')}${W('#/ontap/'+i,'fa-question-circle','s-wa',KEYS[i].length*5,'Câu hỏi ôn tập')}${W('#/nghiphep/'+i,'fa-file-signature','s-in','Đơn','Xin nghỉ phép')}</div><h6 class="text-muted mb-3">THI KẾT THÚC THỰC HÀNH</h6><div class="row">${ex}</div>`;
  $$('[data-ex]',view).forEach(c=>c.onclick=()=>location.hash='#/thi/'+i+'/'+c.dataset.ex);wheelMount(i)};
 
 R.tech=(i,_,qs)=>{head('fa-list','Danh mục kỹ thuật',SUBJ[i]+' · TT 32/2023/TT-BYT');const L=TECH[i]||[];
@@ -138,7 +138,7 @@ function run(){const q=S.qs[S.i];$('#pt').innerHTML='';
  $$('[data-nv]',view).forEach(b=>b.onclick=()=>{S.i=Math.max(0,Math.min(S.qs.length-1,S.i+ +b.dataset.nv));run()});
  $$('[data-g]',view).forEach(b=>b.onclick=()=>{S.i=+b.dataset.g;run()});
  $('#sb').onclick=async()=>{if(await ask({title:'Nộp bài?',msg:'Bạn đã trả lời '+Object.keys(S.ans).length+'/'+S.qs.length+' câu.',ok:'Nộp bài'}))submit()}}
-const pendingCount=()=>LS('vltl_pending_results',[]).length;
+const pendingCount=()=>LS('vltl_pending_results',[]).length+LS('vltl_pending_leaves',[]).length;
 async function submit(){clearInterval(S.tm);const tot=S.qs.length,ok=S.qs.filter((q,k)=>S.ans[k]===q.a).length,sc=score(ok,tot);
  const r={n:S.st.n,d:S.st.d,t:S.t,ph:S.l,set:S.set,from:S.st.from||'',to:S.st.to||'',ok,tot,sc,at:new Date().toLocaleString('vi-VN'),qs:S.qs.map(q=>({q:q.q,o:q.o,a:q.a})),ans:S.ans};
  results.push(r);SV('res',results);audit('Nộp bài thi ('+r.t+', đề '+r.set+'): '+r.sc+'/10',r.n);
@@ -340,10 +340,75 @@ function spinSlots(i){const n=WHEEL_N[i]||3,pool=wheelPool(i),name=$('#wn').valu
     const w=LS('wheel_log',[]);w.push(rec);SV('wheel_log',w);audit('Quay bảng kiểm QTKT ('+SUBJ[i]+'): '+items.map(x=>x.num).join(', '),name);if(OK)api({action:'saveWheel'},{n:name,d,t:SUBJ[i],items:items.map(x=>x.num+'. '+x.name)}).catch(()=>{});
     $('#wres').innerHTML=`<div class="alert alert-success">Kết quả quay cho <b>${esc(name)}</b>: bảng kiểm số <b>${items.map(x=>x.num).join(', ')}</b></div>${wItems(items)}`;bindDrive($('#wres'));toast('Đã lưu kết quả quay')}},1500+k*1100))};
  old?ask({title:'Học viên đã quay trước đó',msg:'Đã có kết quả quay của học viên này. Quay lại sẽ thêm kết quả mới. Tiếp tục?',ok:'Quay lại'}).then(y=>y&&go()):go()}
+/* ===== Xin nghỉ phép ===== */
+const pad2=n=>String(n).padStart(2,'0'),
+ fmtD=d=>pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear(),
+ isoD=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null},
+ isoToday=()=>{const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())};
+
+/* Danh sách ngày nghỉ (dd/mm/yyyy), tối đa 14 ngày liên tiếp */
+function leaveDays(a,b){const s=isoD(a),e=isoD(b||a);if(!s||!e||e<s)return null;
+ const o=[];for(const d=new Date(s);d<=e&&o.length<15;d.setDate(d.getDate()+1))o.push(fmtD(d));return o.length>14?null:o}
+
+/* Câu đơn theo đúng mẫu của Khoa */
+function leaveText(f){const t=fmtD(new Date()),dy=f.days,
+ when=dy.length===1?(dy[0]===t?'hôm nay ngày '+t:'ngày '+dy[0]):'từ ngày '+dy[0]+' đến ngày '+dy[dy.length-1],
+ why=String(f.reason||'').trim().replace(/[.\s]+$/,'');
+ return `Em là học viên ${f.n}, đang thực hành ở phòng ${f.room}, em xin phép bác Trưởng Khoa và chị Hương được nghỉ ${when}. Lý do: ${why}. Em sẽ đi trực bù theo sự phân công và sắp xếp của khoa theo quy định. Em xin chân thành cảm ơn.`}
+
+/* File đơn (HTML → .doc khi tải; Apps Script chuyển thêm PDF khi lưu Drive) */
+const leaveDoc=f=>`<html><head><meta charset="utf-8"><title>Đơn xin nghỉ phép</title><style>body{font-family:'Times New Roman';font-size:13pt;line-height:1.5}.c{text-align:center}</style></head><body><p class="c"><b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br>Độc lập - Tự do - Hạnh phúc</p><h2 class="c">ĐƠN XIN NGHỈ PHÉP</h2><p><b>Kính gửi:</b> Trưởng Khoa VLTL – PHCN, Bệnh viện Y học cổ truyền TP. Hồ Chí Minh</p><p>Họ tên: <b>${esc(f.n)}</b> – Ngày sinh: ${esc(f.d)}<br>Đối tượng: ${esc(f.t)} – Phòng: ${esc(f.room)}</p><p style="text-align:justify">${esc(leaveText(f))}</p><p style="text-align:right">TP. Hồ Chí Minh, ngày ${fmtD(new Date())}<br><b>Học viên</b><br><br><br>${esc(f.n)}</p></body></html>`;
+
+function findStuLeave(n,d){const a=students.find(s=>norm(s.n)===norm(n)&&norm(s.d)===norm(d));if(a)return a;
+ const L=students.filter(s=>nz(s.n)===nz(n));return L.length===1?L[0]:null}
+
+/* Ghi cục bộ META[skey].leaves = [{d,reason}] (máy chủ là nguồn chính, pull() sẽ ghi đè) */
+function addLeaveLocal(f){const e=META[f.key]=META[f.key]||{},L=e.leaves=e.leaves||[];
+ f.days.forEach(d=>{if(!L.some(l=>(typeof l==='string'?l:l.d)===d))L.push({d,reason:f.reason})})}
+
+R.leave=(i,keep)=>{keep=keep||{};head('fa-file-signature','Xin nghỉ phép',SUBJ[i]);
+ view.innerHTML=crumb()+`<div class="card" style="max-width:600px;margin:0 auto"><div class="card-header">Đơn xin nghỉ phép – ${esc(SUBJ[i])}</div><div class="card-body">
+ <label for="ln">Họ và tên</label><input class="form-control mb-3" id="ln" maxlength="80" placeholder="Nguyễn Văn A" value="${esc(keep.n||'')}">
+ <label for="ld">Ngày sinh</label><input class="form-control mb-3" id="ld" maxlength="10" placeholder="dd/mm/yyyy" value="${esc(keep.d||'')}">
+ <label for="lr">Phòng đang thực hành</label><select class="form-control mb-3" id="lr"><option value="">— Chọn phòng —</option>${RAI.map(r=>`<option ${keep.room===r[1]?'selected':''}>${r[1]}</option>`).join('')}<option ${keep.room==='Khác'?'selected':''}>Khác</option></select>
+ <div class="row"><div class="col-sm-6"><label for="lf">Ngày xin nghỉ</label><input type="date" class="form-control mb-3" id="lf" value="${esc(keep.from||isoToday())}"></div>
+ <div class="col-sm-6"><label for="lt">Đến ngày <small class="text-muted">(nếu nghỉ nhiều ngày)</small></label><input type="date" class="form-control mb-3" id="lt" value="${esc(keep.to||'')}"></div></div>
+ <label for="ly">Lý do</label><textarea class="form-control mb-3" id="ly" rows="3" maxlength="300" placeholder="Ví dụ: sốt, đau họng, có giấy hẹn khám…">${esc(keep.reason||'')}</textarea>
+ <button class="btn btn-primary btn-block" id="lgo">Tạo đơn</button></div></div>`;
+ $('#lgo').onclick=()=>{const n=$('#ln').value.trim().replace(/\s+/g,' '),d=$('#ld').value.trim(),room=$('#lr').value,from=$('#lf').value,to=$('#lt').value,reason=$('#ly').value.trim();
+  if(!n||!d||!room||!from||!reason)return toast('Vui lòng nhập đủ họ tên, ngày sinh, phòng, ngày nghỉ và lý do.',1);
+  const days=leaveDays(from,to);if(!days)return toast('Khoảng ngày nghỉ không hợp lệ (tối đa 14 ngày, “đến ngày” phải sau “ngày nghỉ”).',1);
+  const st=findStuLeave(n,d);
+  leavePreview(i,{n,d,room,from,to,reason,days,t:SUBJ[i],st,key:st?skey(st):n+'|'+d})}};
+
+function leavePreview(i,f){head('fa-file-signature','Xin nghỉ phép',SUBJ[i]);
+ view.innerHTML=crumb()+`<div class="card" style="max-width:680px;margin:0 auto"><div class="card-header">Xem lại đơn trước khi gửi</div><div class="card-body">
+ <div class="p-3 mb-3" style="border:1px solid var(--bd);border-radius:8px;line-height:1.7;text-align:justify">${esc(leaveText(f))}</div>
+ ${f.st?'':'<div class="alert alert-warning">Không tìm thấy bạn trong danh sách học viên (đối chiếu theo họ tên + ngày sinh). Đơn vẫn được lưu vào Drive nhưng ngày nghỉ có thể chưa hiện trong bảng của Quản trị viên.</div>'}
+ <div class="d-flex flex-wrap" style="gap:8px"><button class="btn btn-primary" id="lsend"><i class="fas fa-cloud-upload-alt"></i> Gửi đơn &amp; lưu vào Drive</button><button class="btn btn-soft" id="ldl"><i class="fas fa-download"></i> Tải file (.doc)</button><button class="btn btn-soft ml-auto" id="led">← Sửa lại</button></div>
+ <p id="lst" class="text-muted mt-3 mb-0"></p></div></div>`;
+ $('#led').onclick=()=>R.leave(i,f);
+ $('#ldl').onclick=()=>{audit('Tải file đơn xin nghỉ phép ('+f.days.join(', ')+')',f.n);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([leaveDoc(f)],{type:'application/msword'}));
+  a.download='Don_xin_nghi_'+fold(f.n).replace(/\W+/g,'_')+'_'+f.days[0].replace(/\//g,'-')+'.doc';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
+ $('#lsend').onclick=async()=>{const b=$('#lsend');b.disabled=true;addLeaveLocal(f);
+  audit('Gửi đơn xin nghỉ phép ('+f.days.join(', ')+') – lý do: '+f.reason+' – phòng '+f.room,f.n);
+  const pay={r:{key:f.key,n:f.n,d:f.d,t:f.t,room:f.room,days:f.days,reason:f.reason,at:new Date().toLocaleString('vi-VN')},html:leaveDoc(f)};
+  try{if(!OK)throw new Error('Chưa cấu hình kết nối Drive');const x=await api({action:'leave'},pay);if(x.error)throw new Error(x.error);
+   $('#lst').textContent='Đã lưu đơn vào Google Drive và ghi nhận ngày nghỉ.';toast('Đã gửi đơn xin nghỉ phép')}
+  catch(e){const p=LS('vltl_pending_leaves',[]);p.push({...pay,at:Date.now()});SV('vltl_pending_leaves',p);$('#bellDot').hidden=false;
+   $('#lst').textContent='Chưa gửi được lên Drive; đơn đã lưu trên máy và sẽ tự gửi lại khi có kết nối.';toast('Chưa gửi được lên Drive. Đã lưu máy, sẽ thử lại sau.',1)}}}
+
+async function flushLeaves(){const q=LS('vltl_pending_leaves',[]);if(!q.length||!OK)return;const left=[];
+ for(const it of q){try{const x=await api({action:'leave'},{r:it.r,html:it.html});if(x.error)left.push(it)}catch(e){left.push(it)}}
+ SV('vltl_pending_leaves',left);$('#bellDot').hidden=!pendingCount();
+ if(left.length<q.length)toast('Đã đồng bộ '+(q.length-left.length)+' đơn xin nghỉ phép')}
+addEventListener('online',flushLeaves);
+
 /* ===== Router (hash) — #/doituong/1, #/thi/1/0 … ===== */
 function showErr(e){console.error(e);view.innerHTML=`<div class="alert alert-danger"><b>Lỗi hiển thị:</b> ${esc(e&&e.message||e)}<br><small>Nhấn Ctrl+F5 để tải lại. Nếu vẫn lỗi, chụp dòng này gửi người phát triển.</small></div>`}
 function route(){const h=location.hash.replace(/^#\/?/,''),[path,qs]=h.split('?'),[p,a,b]=path.split('/'),n=v=>v===undefined?0:+v;
- const m={'':()=>R.home(),noiquy:()=>R.rules(),phanphong:()=>R.rooms(),doituong:()=>R.subj(n(a)),kythuat:()=>R.tech(n(a),0,qs&&decodeURIComponent(qs.replace(/^q=/,''))),bangkiem:()=>R.bk(n(a)),ontap:()=>R.rev(n(a)),thi:()=>R.exam(n(a),n(b)),quantri:()=>R.admin(a)};
+ const m={'':()=>R.home(),noiquy:()=>R.rules(),phanphong:()=>R.rooms(),doituong:()=>R.subj(n(a)),kythuat:()=>R.tech(n(a),0,qs&&decodeURIComponent(qs.replace(/^q=/,''))),bangkiem:()=>R.bk(n(a)),ontap:()=>R.rev(n(a)),thi:()=>R.exam(n(a),n(b)),quantri:()=>R.admin(a),nghiphep:()=>R.leave(n(a))};
  clearInterval(S.tm);document.body.classList.remove('open');window.scrollTo(0,0);
  buildMenu();const cur='#/'+p+((p==='doituong'||(p==='quantri'&&a))?'/'+a:'');$$('#menu a').forEach(x=>x.classList.toggle('on',x.dataset.h===cur));
  try{Promise.resolve((m[p]||m[''])()).catch(showErr)}catch(e){showErr(e)}view.focus({preventScroll:true})}
@@ -351,6 +416,6 @@ addEventListener('hashchange',route);
 
 /* ===== Khởi động: skeleton → tải dữ liệu → hiển thị ===== */
 route();
-pull().catch(()=>{}).finally(()=>{if(!S.tm&&!/^#\/thi/.test(location.hash)&&(ADM||!/^#\/quantri/.test(location.hash)))route();flush();$('#bellDot').hidden=!pendingCount()});
+pull().catch(()=>{}).finally(()=>{if(!S.tm&&!/^#\/thi/.test(location.hash)&&(ADM||!/^#\/quantri/.test(location.hash)))route();flush();flushLeaves();$('#bellDot').hidden=!pendingCount()});
 setInterval(()=>{if(document.visibilityState==='visible'&&OK&&!S.tm&&!DRAG&&Date.now()>RM_LOCK&&!document.querySelector('.md')&&/^#\/(doituong|phanphong)/.test(location.hash))pull().then(route)},30000);
 })();
