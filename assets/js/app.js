@@ -11,7 +11,8 @@ const norm=x=>String(x||'').trim().toLowerCase().replace(/\s+/g,' ');
 const nz=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 let open=LS('open',{}),students=LS('sv',[]),results=LS('res',[]),FILES=[],ROOMS2=null,ERR='',S={},TAB='w',ADM='',UNDO=null;
 try{ADM=sessionStorage.getItem('vltl_adm')||''}catch(e){}
-const ICON={home:'fa-home',rules:'fa-book',rooms:'fa-th-large',user:'fa-user-md',admin:'fa-lock',file:'fa-file-alt',chart:'fa-chart-pie'};
+let STF='';try{STF=sessionStorage.getItem('vltl_stf')||''}catch(e){}
+const ICON={home:'fa-home',rules:'fa-book',rooms:'fa-th-large',user:'fa-user-md',admin:'fa-lock',file:'fa-file-alt',chart:'fa-chart-pie',check:'fa-user-check'};
 
 /* ===== API (giữ nguyên giao thức Apps Script) ===== */
 async function api(p,body){const c=new AbortController(),t=setTimeout(()=>c.abort(),20000);
@@ -44,7 +45,7 @@ const printHead=t=>`<div class="print-head"><img src="logo.png" alt=""><div><b>B
 const crumb=(extra='',right='')=>`<div class="mb-3 no-print d-flex flex-wrap" style="gap:8px"><button class="btn btn-soft" onclick="history.back()" aria-label="Quay lại"><i class="fas fa-arrow-left"></i> Quay lại</button><a class="btn btn-soft" href="#/">Trang chủ</a>${extra}${right?`<div class="ml-auto d-flex" style="gap:8px">${right}</div>`:''}</div>`;
 
 /* ===== Menu / điều hướng ===== */
-const MENU=[['h','Menu chính'],['#/','Trang chủ','home'],['#/noiquy','Nội quy','rules'],['#/phanphong','Danh sách phân phòng','rooms'],
+const MENU=[['h','Menu chính'],['#/','Trang chủ','home'],['#/noiquy','Nội quy','rules'],['#/phanphong','Danh sách phân phòng','rooms'],['#/diemdanh','Điểm danh','check'],
  ['h','Đối tượng thực hành'],...SUBJ.map((s,i)=>['#/doituong/'+i,s,'user']),['h','Quản trị'],['#/quantri','Quản trị viên','admin']];
 const ADM_SUB=[['tong-quan','Tổng quan','fa-chart-pie'],['mo-thi','Mở thi và chọn đề','fa-door-open'],['vong-quay','Vòng quay bảng kiểm','fa-dice'],['ket-qua','Kết quả thi','fa-file-signature'],['hoc-vien','Danh sách học viên','fa-users'],['nhat-ky','Nhật ký thao tác','fa-history']];
 function buildMenu(){$('#menu').innerHTML=MENU.map(m=>m[0]==='h'?`<h6>${m[1]}</h6>`:`<a href="${m[0]}" data-h="${m[0]}"><i class="fas ${ICON[m[2]]}" aria-hidden="true"></i><span>${m[1]}</span></a>`).join('')+(ADM?ADM_SUB.map(x=>`<a class="sub" href="#/quantri/${x[0]}" data-h="#/quantri/${x[0]}"><i class="fas ${x[2]}" aria-hidden="true"></i><span>${x[1]}</span></a>`).join(''):'')}
@@ -168,7 +169,7 @@ function toggleSec(id){const el=document.getElementById('ad-'+id);if(!el)return;
 /* ===== Nhật ký thao tác (ai, làm gì, lúc nào) ===== */
 document.head.insertAdjacentHTML('beforeend','<style>.ad-sec{scroll-margin-top:84px}.sb-scroll a.sub{height:36px;padding-left:34px;font-size:13px}</style>');
 const AUD='vltl_audit',ADMIN_WHO='Quản trị viên (BS.CKI Trần Cồng Hùng)';
-function audit(what,who){const e={t:new Date().toLocaleString('vi-VN'),w:who||(ADM?ADMIN_WHO:'Học viên'),a:what},L=LS(AUD,[]);L.push(e);SV(AUD,L.slice(-500));if(OK)api({action:'audit'},{entry:e}).catch(()=>{})}
+function audit(what,who){const e={t:new Date().toLocaleString('vi-VN'),w:who||(ADM?ADMIN_WHO:STF?'Nhân viên khoa':'Học viên'),a:what},L=LS(AUD,[]);L.push(e);SV(AUD,L.slice(-500));if(OK)api({action:'audit'},{entry:e}).catch(()=>{})}
 const scrollSec=id=>{const el=document.getElementById('ad-'+id);if(!el)return;if(el.hidden)el.hidden=false;el.scrollIntoView({behavior:'smooth',block:'start'})};
 $('#menu').addEventListener('click',e=>{const a=e.target.closest('a.sub');if(a&&location.hash===a.dataset.h){e.preventDefault();const id=a.dataset.h.split('/').pop();HIDE_SEC.includes(id)?toggleSec(id):scrollSec(id);document.body.classList.remove('open')}});
 /* ===== Quản trị viên: Tổng quan → Mở thi → Vòng quay → Kết quả → Học viên → Nhật ký ===== */
@@ -226,7 +227,7 @@ const chipK=(p,rm,i)=>{const x=sbyk(p.k),mt=META[p.k]||{},lab=x?role(x)+' '+x.n.
 const chipPool=x=>{const k=skey(x),mt=META[k]||{};return `<span class="chp ${role(x).toLowerCase()} ${ADM?'adm':''}" data-k="${esc(k)}" data-room="">${esc(role(x)+' '+x.n.split(' ').slice(-2).join(' '))}${mt.star?'<b class="st">*</b>':''}</span>`};
 const room=(id,t)=>{const srv=ROOMS2&&ROOMS2[TAB],L=srv?(srv[id]||[]):legacy(id);return `<div class="rm" data-drop="${id}" data-n="${nz(L.map(p=>p.n||p.k).join(' '))}"><h3>${t}<span>${L.length} học viên</span></h3>${(srv?L.map((p,i)=>chipK(p,id,i)):L.map(chip)).join('')||`<span class="text-muted">${ADM?'Kéo học viên vào đây':'Chưa có học viên'}</span>`}</div>`};
 const aiRoomHTML=()=>`<div class="card no-print"><div class="card-header">Trợ lý AI – điều động học viên vào phòng <span class="badge badge-pill bg-ok">Gemini</span></div><div class="card-body"><p class="text-muted">Tên học viên được ẩn danh trước khi gửi AI. Ví dụ: “Xếp các bạn chưa phân phòng vào P.207A và P.208 - 209, mỗi phòng tối đa 8 người”.</p><textarea id="air" rows="2" class="form-control mb-2" placeholder="Nhập yêu cầu…"></textarea><button class="btn btn-primary" id="airb">Đề xuất phân phòng</button><div id="aiw" class="mt-3"></div></div></div>`;
-R.rooms=()=>{if(ADM)RMD();head('fa-th-large','Danh sách phân phòng','Sơ đồ phòng và học viên theo từng ca','<button class="btn btn-primary no-print" onclick="print()"><i class="fas fa-print"></i> In</button>');
+R.rooms=()=>{if(ADM)RMD();head('fa-th-large','Danh sách phân phòng','Sơ đồ phòng và học viên theo từng ca',(ADM||STF?'<a class="btn btn-soft no-print" href="#/diemdanh"><i class="fas fa-user-check"></i> Điểm danh</a> ':'')+'<button class="btn btn-primary no-print" onclick="print()"><i class="fas fa-print"></i> In</button>');
  view.innerHTML=crumb()+(ADM?aiRoomHTML()+poolCard():'')+printHead('Danh sách phân phòng – '+TABS[TAB])+`<div class="card no-print"><div class="card-body d-flex flex-wrap" style="gap:8px">${Object.keys(TABS).map(k=>`<button class="btn ${k===TAB?'btn-primary':'btn-soft'}" data-t="${k}">${WL()[k]}</button>`).join('')}<input class="form-control ml-auto" style="max-width:240px" id="rf" placeholder="Lọc theo tên…" aria-label="Lọc học viên"></div><div class="card-body pt-0 text-muted">${ADM?'Quản trị: nhấn giữ tên rồi kéo vào phòng; bấm tên để sửa ghi chú, dấu *, bỏ khỏi phòng.':'Bấm tên học viên để xem thông tin.'}</div></div>
  <div class="card"><div class="card-header">Khu N4</div><div class="card-body"><div class="row"><div class="col-md-5">${room('201-202','P.201 - 202')}${room('208-209','P.208 - 209')}</div><div class="col-md-2"><div class="hall">HÀNH LANG</div></div><div class="col-md-5">${room('204-206','P.204 - 206')}${room('207A','P.207A')}${room('207B','P.207B')}</div></div></div></div>
  <div class="card"><div class="card-header">Khu N6</div><div class="card-body"><div class="row">${RAI.slice(5).map(r=>`<div class="col-md-6">${room(...r)}</div>`).join('')}</div></div></div>
@@ -353,10 +354,227 @@ function spinSlots(i){const n=WHEEL_N[i]||3,pool=wheelPool(i),name=$('#wn').valu
     const w=LS('wheel_log',[]);w.push(rec);SV('wheel_log',w);audit('Quay bảng kiểm QTKT ('+SUBJ[i]+'): '+items.map(x=>x.num).join(', '),name);if(OK)api({action:'saveWheel'},{n:name,d,t:SUBJ[i],items:items.map(x=>x.num+'. '+x.name)}).catch(()=>{});
     $('#wres').innerHTML=`<div class="alert alert-success">Kết quả quay cho <b>${esc(name)}</b>: bảng kiểm số <b>${items.map(x=>x.num).join(', ')}</b></div>${wItems(items)}`;bindDrive($('#wres'));toast('Đã lưu kết quả quay')}},1500+k*1100))};
  old?ask({title:'Học viên đã quay trước đó',msg:'Đã có kết quả quay của học viên này. Quay lại sẽ thêm kết quả mới. Tiếp tục?',ok:'Quay lại'}).then(y=>y&&go()):go()}
+/* ===================== ĐIỂM DANH ===================== */
+document.head.insertAdjacentHTML('beforeend','<style>'+
+'.ab{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--bd);background:var(--card);color:inherit;border-radius:6px;padding:5px 10px;font-size:12.5px;cursor:pointer;line-height:1.2;min-height:34px}'+
+'.ab:hover{border-color:var(--pr)}.ab.sm{padding:3px 8px;min-height:28px;font-size:12px}'+
+'.ab.P{border-left:4px solid #3ac47d}.ab.L{border-left:4px solid #f7b924}.ab.E{border-left:4px solid #16aaff}.ab.U{border-left:4px solid #d92550}'+
+'.ab.on{color:#fff;border-color:transparent}.ab.on.P{background:#3ac47d}.ab.on.L{background:#f7b924;color:#1e2a3a}.ab.on.E{background:#16aaff}.ab.on.U{background:#d92550}'+
+'.arow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bd)}.arow:last-child{border-bottom:0}'+
+'.arow .nm{flex:1 1 200px;min-width:150px}.arow .bt{display:flex;flex-wrap:wrap;gap:6px}'+
+'.sugt{font-size:11px;color:#0b7bc4;font-weight:600}.rt{font-size:12px;font-weight:700;padding:2px 8px;border-radius:12px;display:inline-block;margin-top:2px}'+
+'.att-sticky{position:sticky;bottom:0;z-index:5}@media print{.att-sticky{display:none}}'+
+'</style>');
+
+const AST={P:{l:'Có mặt',f:'Có mặt',ic:'fa-check'},L:{l:'Trễ',f:'Trễ',ic:'fa-clock'},E:{l:'Có phép',f:'Vắng có phép',ic:'fa-envelope-open'},U:{l:'Không phép',f:'Vắng không phép',ic:'fa-user-times'}};
+const AK=['P','L','E','U'];
+const pad2=n=>String(n).padStart(2,'0'),isoD=d=>d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+const dmyS=s=>{const p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]};
+const dateOf=s=>{const p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])};
+const WDN=['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+const dayTab=s=>{const w=dateOf(s).getDay();return w===6?'t7':w===0?'cn':'w'};   // khớp 3 tab của ROOMS2
+const attPin=()=>ADM||STF;
+const AT={date:isoD(new Date()),s:new Date().getHours()<12?'S':'C',rows:[],ld:'',cur:{},dirty:false,err:'',who:LS('vltl_att_who','')||''};
+const sesName=s=>s==='S'?'Sáng':'Chiều';
+
+/* --- Đăng nhập: một ô mật khẩu, máy chủ tự xác định Quản trị viên / Nhân viên khoa --- */
+async function attLogin(){
+ const p=await ask({title:'Điểm danh',msg:'Nhập mật khẩu Quản trị viên hoặc Nhân viên khoa.',input:'password',ok:'Đăng nhập'});
+ if(!p)return false;
+ if(!OK){toast('Chưa cấu hình kết nối Google Drive (API)',1);return false}
+ try{const r=await api({action:'authRole'},{pin:p});
+  if(r&&r.ok){
+   if(r.role==='admin'){ADM=p;try{sessionStorage.setItem('vltl_adm',p)}catch(e){}buildMenu();audit('Đăng nhập quản trị (từ trang Điểm danh)')}
+   else{STF=p;try{sessionStorage.setItem('vltl_stf',p)}catch(e){}audit('Đăng nhập Nhân viên khoa','Nhân viên khoa')}
+   toast('Đã đăng nhập');return true}
+  if(r&&r.error==='action')toast('Máy chủ chưa cập nhật Apps Script (thiếu action authRole)',1);
+  else{audit('Đăng nhập Điểm danh thất bại','Không xác định');toast('Sai mật khẩu',1)}
+ }catch(e){toast('Không kết nối được máy chủ',1)}
+ return false}
+function attPinBad(){STF='';ADM='';try{sessionStorage.removeItem('vltl_stf');sessionStorage.removeItem('vltl_adm')}catch(e){}buildMenu();toast('Mật khẩu không còn hiệu lực. Vui lòng đăng nhập lại.',1);location.hash='#/';return false}
+
+/* --- Danh sách học viên theo buổi (ROOMS2[tab của ngày]) --- */
+const caOf=note=>{const n=nz(note||''),m=/(^| )sang( |$)/.test(n),c=/(^| )chieu( |$)/.test(n);return m&&!c?'sáng':c&&!m?'chiều':''};
+function attRoster(date,ses){
+ const Rm=(ROOMS2&&ROOMS2[dayTab(date)])||{},seen={},L=[];
+ RAI.forEach(([id,name])=>(Rm[id]||[]).forEach(p=>{
+  const x=sbyk(p.k);if(!x||seen[p.k])return;
+  const ca=caOf(p.note);if((ses==='S'&&ca==='chiều')||(ses==='C'&&ca==='sáng'))return;   // ghi chú ca "chiều" → không hiện ở buổi sáng và ngược lại
+  seen[p.k]=1;L.push({k:p.k,x,room:id,rname:name,note:p.note||''})}));
+ return L}
+/* Nghỉ phép đã duyệt: META[skey].leaves ('dd/mm/yyyy' hoặc {d,...}); bỏ qua mục có cờ từ chối/chờ duyệt */
+const attLeave=(x,s)=>((META[skey(x)]||{}).leaves||[]).some(l=>{
+ if(l&&typeof l==='object'&&(l.ok===false||l.approved===false||/tu choi|cho duyet|pending|reject/.test(nz(l.status||''))))return false;
+ const D=parseDMY(typeof l==='string'?l:l&&l.d);return !!D&&isoD(D)===s});
+
+/* --- Tải / dựng dữ liệu --- */
+async function attLoad(force){
+ if(!force&&AT.ld===AT.date)return true;
+ const mo=AT.date.slice(0,7);AT.err='';
+ if(!OK){AT.err='Chưa cấu hình kết nối Google Drive (API).';AT.rows=[];AT.ld=AT.date;return false}
+ try{const r=await api({action:'loadAttend'},{pin:attPin(),from:mo+'-01',to:mo+'-31'});
+  if(r&&r.error){if(r.error==='pin')return attPinBad();AT.err=r.error==='action'?'Máy chủ chưa cập nhật Apps Script (thiếu action loadAttend).':'Lỗi tải điểm danh: '+r.error;AT.rows=[];AT.ld=AT.date;return false}
+  AT.rows=(r.rows||[]).map(a=>({d:a[0],s:a[1],room:a[2],k:a[3],n:a[4],st:a[5],note:a[6],by:a[7],at:a[8]}));AT.ld=AT.date;return true}
+ catch(e){AT.err='Không kết nối được máy chủ: '+e.message;AT.rows=[];AT.ld=AT.date;return false}}
+function attBuild(){
+ const idx={};AT.rows.forEach(r=>{if(r.d===AT.date&&r.s===AT.s)idx[r.k]=r});AT.cur={};
+ attRoster(AT.date,AT.s).forEach(e=>{const r=idx[e.k];
+  if(r)AT.cur[e.k]={s:r.st,note:r.note||''};
+  else if(attLeave(e.x,AT.date))AT.cur[e.k]={s:'E',note:'Nghỉ phép đã duyệt',sug:true}})}   // gợi ý, lưu khi bấm Lưu
+function attStat(){const m={};AT.rows.forEach(r=>{const o=m[r.k]||(m[r.k]={P:0,L:0,E:0,U:0});if(o[r.st]!=null)o[r.st]++});return m}
+/* Chuyên cần = (Có mặt + Trễ) / (Có mặt + Trễ + Vắng không phép); vắng có phép không tính vào mẫu số */
+const pct=o=>{if(!o)return null;const d=o.P+o.L+o.U;return d?Math.round((o.P+o.L)/d*100):null};
+const rtCol=p=>p>=90?'#15803d':p>=80?'#b45309':'#d92550';
+
+/* --- Giao diện --- */
+function attBar(){const b=$('#att-bar');if(!b)return;const d=dateOf(AT.date);
+ b.innerHTML=`<div class="card no-print"><div class="card-body d-flex flex-wrap align-items-center" style="gap:8px">
+ <button class="btn btn-soft" id="att-prev" aria-label="Ngày trước"><i class="fas fa-chevron-left"></i></button>
+ <input type="date" class="form-control" style="width:auto" id="att-date" value="${AT.date}" aria-label="Ngày điểm danh">
+ <button class="btn btn-soft" id="att-next" aria-label="Ngày sau"><i class="fas fa-chevron-right"></i></button>
+ <button class="btn btn-soft" id="att-today">Hôm nay</button>
+ <div class="btn-group" role="group" aria-label="Buổi">${[['S','Sáng'],['C','Chiều']].map(([k,l])=>`<button type="button" class="btn ${AT.s===k?'btn-primary':'btn-soft'}" data-ss="${k}" aria-pressed="${AT.s===k}">${l}</button>`).join('')}</div>
+ <span class="text-muted">${WDN[d.getDay()]} ${dmyS(AT.date)} · phân phòng: ${TABS[dayTab(AT.date)]}</span>
+ <input class="form-control ml-auto" style="max-width:200px" id="att-who" placeholder="Người điểm danh" value="${esc(AT.who)}" aria-label="Người điểm danh">
+ <button class="btn btn-soft" id="att-reload" aria-label="Tải lại dữ liệu"><i class="fas fa-sync"></i></button>
+ <button class="btn btn-primary" id="att-aiopen"><i class="fas fa-robot"></i> Trợ lý AI</button></div></div>`}
+function attDirty(b){AT.dirty=!!b;const d=$('#att-dirty');if(d){d.textContent=AT.dirty?'● Có thay đổi chưa lưu':'Đã đồng bộ';d.style.color=AT.dirty?'#d92550':''}
+ window.onbeforeunload=AT.dirty?(e=>{e.preventDefault();e.returnValue=''}):null}
+function attDraw(){
+ const sum=$('#att-sum'),g=$('#att-grid');if(!g)return;
+ const L=attRoster(AT.date,AT.s),st=attStat(),mo=AT.date.slice(5,7)+'/'+AT.date.slice(0,4),cnt={P:0,L:0,E:0,U:0,N:0};
+ L.forEach(e=>{const c=AT.cur[e.k];c&&c.s?cnt[c.s]++:cnt.N++});
+ let mp=0,md=0;L.forEach(e=>{const o=st[e.k];if(o){mp+=o.P+o.L;md+=o.P+o.L+o.U}});
+ const W=(ic,c,n,l)=>`<div class="col-6 col-md-4 col-xl-2"><div class="card widget"><div class="wi ${c}"><i class="fas ${ic}"></i></div><div><div class="wn">${n}</div><div class="wl">${l}</div></div></div></div>`;
+ sum.innerHTML=`<div class="row">${W('fa-check','s-ok',cnt.P,'Có mặt')}${W('fa-clock','s-wa',cnt.L,'Trễ')}${W('fa-envelope-open','s-in',cnt.E,'Vắng có phép')}${W('fa-user-times','s-no',cnt.U,'Vắng không phép')}${W('fa-hourglass-half','s-pr',cnt.N,'Chưa điểm danh')}${W('fa-percentage','s-ok',md?Math.round(mp/md*100)+'%':'—','Chuyên cần tháng '+mo)}</div>
+ <div class="card no-print"><div class="card-body d-flex flex-wrap align-items-center" style="gap:8px"><b>Cả buổi:</b>${AK.map(s=>`<button type="button" class="ab sm ${s}" data-bulk="${s}" data-scope="all"><i class="fas ${AST[s].ic}"></i>${AST[s].f} tất cả</button>`).join('')}<button type="button" class="ab sm" data-bulk="" data-scope="all">Xóa chọn</button><label class="mb-0 ml-auto"><input type="checkbox" id="att-ow"> Ghi đè cả người đã chọn</label></div></div>`;
+ const row=e=>{const c=AT.cur[e.k]||{},p=pct(st[e.k]),o=st[e.k]||{P:0,L:0,E:0,U:0},
+  rate=p==null?'<span class="rt text-muted">—</span>':`<span class="rt" style="background:${rtCol(p)}22;color:${rtCol(p)}" title="Tháng ${mo}: Có mặt ${o.P} · Trễ ${o.L} · Có phép ${o.E} · Không phép ${o.U}">Chuyên cần ${p}%</span>`;
+  return `<div class="arow"><div class="nm"><b>${esc(role(e.x)+' '+e.x.n)}</b>${e.note?` <small class="text-muted">${esc(e.note)}</small>`:''}${c.sug?' <span class="sugt">gợi ý: nghỉ phép đã duyệt</span>':''}<div>${rate}</div></div>
+  <div class="bt">${AK.map(s=>`<button type="button" class="ab ${s} ${c.s===s?'on':''}" data-st="${s}" data-k="${esc(e.k)}" aria-pressed="${c.s===s}" aria-label="${AST[s].f} – ${esc(e.x.n)}"><i class="fas ${AST[s].ic}"></i>${AST[s].l}</button>`).join('')}</div>
+  ${c.s&&c.s!=='P'?`<input class="form-control form-control-sm" style="max-width:200px" data-note="${esc(e.k)}" placeholder="Ghi chú / lý do" value="${esc(c.note||'')}" aria-label="Ghi chú">`:''}</div>`};
+ const cards=RAI.map(([id,name])=>{const es=L.filter(e=>e.room===id);if(!es.length)return'';const rc={P:0,L:0,E:0,U:0,N:0};es.forEach(e=>{const c=AT.cur[e.k];c&&c.s?rc[c.s]++:rc.N++});
+  return `<div class="card"><div class="card-header"><span>${esc(name)} <span class="badge badge-pill bg-ok">${es.length}</span></span><span class="text-muted" style="font-size:12px;font-weight:400;text-transform:none">CM ${rc.P} · Trễ ${rc.L} · Phép ${rc.E} · KP ${rc.U} · Chưa ${rc.N}</span></div><div class="card-body pt-2"><div class="d-flex flex-wrap align-items-center no-print" style="gap:6px"><small class="text-muted">Cả phòng:</small>${AK.map(s=>`<button type="button" class="ab sm ${s}" data-bulk="${s}" data-scope="${esc(id)}">${AST[s].l}</button>`).join('')}<button type="button" class="ab sm" data-bulk="" data-scope="${esc(id)}">Xóa</button></div>${es.map(row).join('')}</div></div>`}).join('');
+ g.innerHTML=(AT.err?`<div class="alert alert-warning">${esc(AT.err)}</div>`:'')+(cards||`<div class="alert alert-primary">Chưa có học viên được phân phòng cho ${WDN[dateOf(AT.date).getDay()]} (tab “${TABS[dayTab(AT.date)]}”) ở buổi ${sesName(AT.s)}. Vào <a href="#/phanphong">Danh sách phân phòng</a>, chọn đúng tab rồi kéo học viên vào phòng.</div>`)}
+
+/* --- Thao tác --- */
+function setSt(k,s){
+ const c=AT.cur[k]||{};AT.cur[k]=c.s===s?{s:'',note:'',touched:true}:{s,note:s==='P'?'':(c.note||''),touched:true};
+ attDirty(true);const y=scrollY;attDraw();scrollTo(0,y);
+ const b=$$('[data-st]').find(x=>x.dataset.k===k&&x.dataset.st===s);if(b)b.focus({preventScroll:true})}
+function bulk(scope,st){
+ const L=attRoster(AT.date,AT.s).filter(e=>scope==='all'||e.room===scope),ow=($('#att-ow')||{}).checked,snap=JSON.stringify(AT.cur);let n=0;
+ L.forEach(e=>{const c=AT.cur[e.k];
+  if(st===''){if(c&&c.s){AT.cur[e.k]={s:'',note:'',touched:true};n++}return}
+  if(!c||!c.s||ow){AT.cur[e.k]={s:st,note:st==='P'?'':(c&&c.note)||'',touched:true};n++}});
+ if(!n)return toast(st===''?'Không có học viên nào đã được chọn.':'Tất cả đã được chọn; tích “Ghi đè” nếu muốn thay đổi.',1);
+ attDirty(true);attDraw();
+ audit('Điểm danh hàng loạt ('+(scope==='all'?'cả buổi':'phòng '+scope)+', '+dmyS(AT.date)+' '+sesName(AT.s)+'): '+(st?AST[st].f:'xóa chọn')+' – '+n+' học viên (chưa lưu)');
+ toast('Đã cập nhật '+n+' học viên (chưa lưu)',0,()=>{AT.cur=JSON.parse(snap);attDirty(true);attDraw()})}
+async function attGo(date,s,force){
+ const nd=date||AT.date,ns=s||AT.s;
+ if(AT.dirty&&(nd!==AT.date||ns!==AT.s||force)){
+  if(!await ask({title:'Thay đổi chưa lưu',msg:'Buổi hiện tại có thay đổi chưa lưu. Bỏ thay đổi và tiếp tục?',ok:'Bỏ thay đổi'})){attBar();return}}
+ AT.date=nd;AT.s=ns;
+ if(force||nd!==AT.ld){$('#att-grid').innerHTML=skeleton();await attLoad(true)}
+ attBuild();attBar();attDirty(false);attDraw()}
+const shiftDay=n=>{const d=dateOf(AT.date);d.setDate(d.getDate()+n);return isoD(d)};
+async function attDiscard(){if(!AT.dirty)return;if(!await ask({title:'Hủy thay đổi',msg:'Khôi phục lưới điểm danh về dữ liệu đã lưu?',ok:'Hủy thay đổi'}))return;attBuild();attDirty(false);attDraw()}
+async function attSave(){
+ const L=attRoster(AT.date,AT.s),recs=[];
+ L.forEach(e=>{const c=AT.cur[e.k];if(c&&(c.touched||c.sug))recs.push({room:e.room,k:e.k,n:e.x.n,s:c.s||'',note:(c.s&&c.s!=='P'?c.note:'')||''})});
+ if(!recs.length)return toast('Chưa có thay đổi nào để lưu',1);
+ if(!OK)return toast('Chưa cấu hình kết nối Google Drive (API)',1);
+ const btn=$('#att-save');btn.disabled=true;
+ try{
+  const r=await api({action:'saveAttend'},{pin:attPin(),date:AT.date,session:AT.s,records:recs,who:AT.who});
+  if(r.error){if(r.error==='pin')return attPinBad();throw new Error(r.error==='action'?'Máy chủ chưa cập nhật Apps Script (thiếu action saveAttend)':r.error)}
+  const ks={};recs.forEach(x=>ks[x.k]=1);
+  AT.rows=AT.rows.filter(x=>!(x.d===AT.date&&x.s===AT.s&&ks[x.k]));
+  const by=ADM?'Quản trị viên':'Nhân viên khoa',at=new Date().toLocaleString('vi-VN');
+  recs.forEach(x=>{if(x.s)AT.rows.push({d:AT.date,s:AT.s,room:x.room,k:x.k,n:x.n,st:x.s,note:x.note,by,at})});
+  L.forEach(e=>{const c=AT.cur[e.k];if(c){c.touched=false;c.sug=false}});
+  const cn={P:0,L:0,E:0,U:0};recs.forEach(x=>{if(cn[x.s]!=null)cn[x.s]++});
+  audit('Lưu điểm danh '+dmyS(AT.date)+' '+sesName(AT.s)+': '+recs.length+' bản ghi (CM '+cn.P+', Trễ '+cn.L+', Phép '+cn.E+', KP '+cn.U+')'+(AT.who?' – người ghi: '+AT.who:''));
+  toast('Đã lưu điểm danh lên Drive');attDirty(false);attDraw()}
+ catch(e){toast('Chưa lưu được: '+e.message,1)}
+ finally{btn.disabled=false}}
+
+/* --- Trợ lý AI: tên học viên ẩn danh trước khi gửi (chỉ gửi mã H#, vai trò, phòng, ca) --- */
+function attNames(x){const t=x.n.trim().split(/\s+/),v=[x.n];if(t.length>=3)v.push(t.slice(-2).join(' '));
+ const one=t[t.length-1],f=fold(one).toLowerCase();if(one.length>=2&&f!=='sang'&&f!=='chieu')v.push(one);return v}   // tên đơn “Sáng/Chiều” trùng từ khóa buổi → dùng họ tên đầy đủ
+function maskAtt(text,L){
+ const orig=text.normalize('NFC'),f=fold(orig).toLowerCase(),g={};
+ students.forEach(x=>{const i=L.findIndex(e=>e.k===skey(x)),id=i>=0?'H'+(i+1):'K'+(students.indexOf(x)+1);   // K# = học viên không thuộc buổi này
+  attNames(x).forEach(n=>{const q=fold(n).toLowerCase().trim();if(q.length>=2)(g[q]=g[q]||[]).push(id)})});
+ const hits=[];
+ Object.keys(g).sort((a,b)=>b.length-a.length).forEach(n=>{
+  const re=new RegExp('(^|[^a-z0-9])('+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s+')+')(?![a-z0-9])','g');let m;
+  while((m=re.exec(f))){const a=m.index+m[1].length,b=a+m[2].length;if(!hits.some(h=>a<h.b&&b>h.a))hits.push({a,b,t:'học viên '+[...new Set(g[n])].join(' hoặc ')})}});
+ hits.sort((x,y)=>y.a-x.a);let out=orig;hits.forEach(h=>{out=out.slice(0,h.a)+h.t+out.slice(h.b)});return out}
+async function attAI(){
+ const o=$('#att-aio'),raw=($('#att-aiq').value||'').trim();if(!raw)return;
+ const f=fold(maskAtt(raw,[])).toLowerCase(),ms=/(^|[^a-z])sang([^a-z]|$)/.test(f),mc=/(^|[^a-z])chieu([^a-z]|$)/.test(f);
+ if(ms!==mc){const want=ms?'S':'C';if(want!==AT.s){
+  if(AT.dirty){o.innerHTML='<p class="text-danger">Yêu cầu nhắc buổi '+sesName(want)+' nhưng buổi hiện tại có thay đổi chưa lưu. Hãy lưu hoặc hủy thay đổi rồi thử lại.</p>';return}
+  AT.s=want;attBuild();attBar();attDirty(false);attDraw()}}
+ const L=attRoster(AT.date,AT.s);
+ if(!L.length){o.innerHTML='<p class="text-muted">Chưa có học viên trong buổi này.</p>';return}
+ o.innerHTML='<span class="text-muted">Đang hỏi trợ lý AI…</span>';
+ try{
+  const rs=RAI.filter(([id])=>L.some(e=>e.room===id));
+  const r=await api({action:'aiAttend'},{pin:attPin(),text:maskAtt(raw,L),session:AT.s,date:dmyS(AT.date),rooms:rs.map(([id,name])=>({id,name})),students:L.map((e,i)=>({id:'H'+(i+1),role:role(e.x),room:e.room,ca:caOf(e.note)}))});
+  if(r.error){if(r.error==='pin')return attPinBad();throw new Error(r.error==='action'?'Máy chủ chưa cập nhật Apps Script (thiếu action aiAttend)':r.error)}
+  audit('Dùng trợ lý AI điểm danh ('+dmyS(AT.date)+' '+sesName(AT.s)+')');
+  const prop=JSON.parse(JSON.stringify(AT.cur)),lines=[];let nFill=0;
+  if(r.fill)L.forEach(e=>{if(r.fill.rooms.indexOf('all')>=0||r.fill.rooms.indexOf(e.room)>=0){const c=prop[e.k];if(!c||!c.s){prop[e.k]={s:r.fill.status,note:'',touched:true};nFill++}}});   // chỉ điền người chưa chọn
+  (r.changes||[]).forEach(c=>{const e=L[+String(c.id).slice(1)-1];if(!e)return;const lv=attLeave(e.x,AT.date);
+   let s=c.status;if(s==='A')s=lv?'E':'U';   // “vắng” không nói rõ: có nghỉ phép đã duyệt → Có phép, ngược lại → Không phép
+   const note=s==='P'?'':(c.note||(s==='E'&&lv?'Nghỉ phép đã duyệt':''));prop[e.k]={s,note,touched:true};lines.push({e,s,note})});
+  const nm=Object.fromEntries(RAI),rooms=r.fill?(r.fill.rooms.indexOf('all')>=0?'tất cả phòng':r.fill.rooms.map(x=>nm[x]).join(', ')):'';
+  if(!lines.length&&!nFill){o.innerHTML=`<p class="text-muted">Không có thay đổi nào được đề xuất.</p><p class="text-muted">${esc(r.note||'')}</p>`;return}
+  AT.prop=prop;
+  o.innerHTML=`<div class="alert alert-info mb-2">${WDN[dateOf(AT.date).getDay()]} ${dmyS(AT.date)} · buổi ${sesName(AT.s)}</div>`+
+   (nFill?`<p>Điền <b>${AST[r.fill.status].f}</b> cho <b>${nFill}</b> học viên chưa chọn (${esc(rooms)}).</p>`:'')+
+   (lines.length?`<div class="ov"><table class="tbl"><tr><th>Học viên</th><th>Phòng</th><th>Trạng thái</th></tr>${lines.map(l=>`<tr><td>${esc(role(l.e.x)+' '+l.e.x.n)}</td><td>${esc(l.e.rname)}</td><td><b>${AST[l.s].f}</b>${l.note?' · '+esc(l.note):''}</td></tr>`).join('')}</table></div>`:'')+
+   `<button class="btn btn-primary mt-2" id="att-apply">Áp dụng vào lưới</button><p class="text-muted mt-2">${esc(r.note||'')}</p>`;
+  $('#att-apply').onclick=()=>{const snap=JSON.stringify(AT.cur);AT.cur=AT.prop;attDirty(true);attDraw();
+   audit('Áp dụng điểm danh do trợ lý AI đề xuất ('+dmyS(AT.date)+' '+sesName(AT.s)+'): '+lines.length+' thay đổi, điền '+nFill+' (chưa lưu)');
+   o.innerHTML='';toast('Đã điền vào lưới. Kiểm tra rồi bấm “Lưu điểm danh”.',0,()=>{AT.cur=JSON.parse(snap);attDirty(true);attDraw()})}}
+ catch(e){o.innerHTML=`<p class="text-danger">${esc(e.message)}</p>`}}
+
+/* --- Trang #/diemdanh --- */
+R.attend=async()=>{
+ if(!attPin()&&!(await attLogin()))return location.hash='#/';
+ head('fa-user-check','Điểm danh','Theo ngày, buổi và phòng · '+(ADM?'Quản trị viên':'Nhân viên khoa'));
+ view.innerHTML=crumb('',STF?'<button class="btn btn-soft" id="att-out"><i class="fas fa-sign-out-alt"></i> Thoát</button>':'')+
+ `<div id="att-root"><div id="att-bar"></div>
+ <div class="card no-print" id="att-aip" hidden><div class="card-header">Trợ lý AI – điểm danh hàng loạt <span class="badge badge-pill bg-ok">Gemini</span></div><div class="card-body"><p class="text-muted">Tên học viên được ẩn danh trước khi gửi AI (chỉ gửi mã H1, H2…, vai trò, phòng). Ví dụ: “Phòng 208 sáng vắng KTV Hùng, BS Châu”; “Cả phòng 207A có mặt, Mỹ Tú trễ”; “Phòng 6.216 chiều vắng có phép Thư”. AI chỉ đề xuất: bạn xem, bấm Áp dụng rồi bấm Lưu điểm danh.</p><textarea id="att-aiq" rows="2" class="form-control mb-2" placeholder="Nhập yêu cầu…"></textarea><button class="btn btn-primary" id="att-aib">Hỏi trợ lý</button><div id="att-aio" class="mt-3"></div></div></div>
+ <div id="att-sum"></div><div id="att-grid">${skeleton()}</div>
+ <div class="card att-sticky no-print"><div class="card-body d-flex align-items-center" style="gap:10px"><span id="att-dirty" class="text-muted flex-fill"></span><button class="btn btn-soft" id="att-disc">Hủy thay đổi</button><button class="btn btn-primary" id="att-save"><i class="fas fa-save"></i> Lưu điểm danh</button></div></div></div>`;
+ const out=$('#att-out');if(out)out.onclick=()=>{audit('Nhân viên khoa thoát','Nhân viên khoa');STF='';try{sessionStorage.removeItem('vltl_stf')}catch(e){}toast('Đã thoát');location.hash='#/'};
+ const root=$('#att-root');
+ root.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.st)return setSt(t.dataset.k,t.dataset.st);
+  if(t.dataset.bulk!==undefined&&t.dataset.scope)return bulk(t.dataset.scope,t.dataset.bulk);
+  if(t.dataset.ss)return attGo(null,t.dataset.ss);
+  switch(t.id){
+   case'att-prev':return attGo(shiftDay(-1));case'att-next':return attGo(shiftDay(1));case'att-today':return attGo(isoD(new Date()));
+   case'att-reload':return attGo(null,null,true);case'att-save':return attSave();case'att-disc':return attDiscard();
+   case'att-aiopen':{const p=$('#att-aip');p.hidden=!p.hidden;if(!p.hidden)$('#att-aiq').focus();return}
+   case'att-aib':return attAI()}});
+ root.addEventListener('change',e=>{if(e.target.id==='att-date'&&e.target.value)attGo(e.target.value)});
+ root.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='att-who'){AT.who=t.value.slice(0,60);SV('vltl_att_who',AT.who);return}
+  if(t.hasAttribute&&t.hasAttribute('data-note')){const c=AT.cur[t.dataset.note];if(c){c.note=t.value;c.touched=true;attDirty(true)}}});
+ attBar();attDirty(false);
+ await attLoad(true);attBuild();attBar();attDraw()};
+/* ===================== HẾT ĐIỂM DANH ===================== */
+
 /* ===== Router (hash) — #/doituong/1, #/thi/1/0 … ===== */
 function showErr(e){console.error(e);view.innerHTML=`<div class="alert alert-danger"><b>Lỗi hiển thị:</b> ${esc(e&&e.message||e)}<br><small>Nhấn Ctrl+F5 để tải lại. Nếu vẫn lỗi, chụp dòng này gửi người phát triển.</small></div>`}
 function route(){const h=location.hash.replace(/^#\/?/,''),[path,qs]=h.split('?'),[p,a,b]=path.split('/'),n=v=>v===undefined?0:+v;
- const m={'':()=>R.home(),noiquy:()=>R.rules(),phanphong:()=>R.rooms(),doituong:()=>R.subj(n(a)),kythuat:()=>R.tech(n(a),0,qs&&decodeURIComponent(qs.replace(/^q=/,''))),bangkiem:()=>R.bk(n(a)),ontap:()=>R.rev(n(a)),thi:()=>R.exam(n(a),n(b)),quantri:()=>R.admin(a)};
+ const m={'':()=>R.home(),noiquy:()=>R.rules(),phanphong:()=>R.rooms(),doituong:()=>R.subj(n(a)),kythuat:()=>R.tech(n(a),0,qs&&decodeURIComponent(qs.replace(/^q=/,''))),bangkiem:()=>R.bk(n(a)),ontap:()=>R.rev(n(a)),thi:()=>R.exam(n(a),n(b)),quantri:()=>R.admin(a),diemdanh:()=>R.attend()};
  clearInterval(S.tm);document.body.classList.remove('open');window.scrollTo(0,0);
  buildMenu();const cur='#/'+p+((p==='doituong'||(p==='quantri'&&a))?'/'+a:'');$$('#menu a').forEach(x=>x.classList.toggle('on',x.dataset.h===cur));
  try{Promise.resolve((m[p]||m[''])()).catch(showErr)}catch(e){showErr(e)}view.focus({preventScroll:true})}
@@ -364,6 +582,6 @@ addEventListener('hashchange',route);
 
 /* ===== Khởi động: skeleton → tải dữ liệu → hiển thị ===== */
 route();
-pull().catch(()=>{}).finally(()=>{if(!S.tm&&!/^#\/thi/.test(location.hash)&&(ADM||!/^#\/quantri/.test(location.hash)))route();flush();bellUpdate()});
+pull().catch(()=>{}).finally(()=>{if(!S.tm&&!/^#\/thi/.test(location.hash)&&(ADM||(!/^#\/quantri/.test(location.hash)&&(STF||!/^#\/diemdanh/.test(location.hash)))))route();flush();bellUpdate()});
 setInterval(()=>{if(document.visibilityState==='visible'&&OK&&!S.tm&&!DRAG&&Date.now()>RM_LOCK&&!document.querySelector('.md')&&/^#\/(doituong|phanphong)/.test(location.hash))pull().then(route)},30000);
 })();
